@@ -14,3 +14,5 @@ Procedure to get started:
 * Run the program:
     * python app.py
     * Go to **http://127.0.0.1:8050/** to launch the dashboard
+    
+ ![alt text](https://raw.githubusercontent.com/tituschirchir/abmlcausm/master/image.png)

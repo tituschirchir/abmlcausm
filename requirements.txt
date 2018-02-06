@@ -4,6 +4,7 @@ dash
 dash-renderer
 dash-html-components
 dash-core-components
+scipy
 plotly
 Flask
 Mesa

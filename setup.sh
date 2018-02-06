@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # !/usr/bin/env python
-git clone https://github.com/tituschirchir/abmlcausm.git
-cd abmlcausm
+
 virtualenv abmenv
 if [ -d "abenv/Scripts/" ]; then
     source abmenv/Scripts/activate
@@ -11,5 +10,3 @@ if [ -d "abenv/bin/" ]; then
 fi
 
 pip install -r requirements.txt
-
-python app.py

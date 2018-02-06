@@ -1,5 +1,5 @@
 # Agent Based Modeling with Machine Learning
-In this module, we aim to present an agent based modeling 
+Procedure to get started:
 
 * Clone the repository:
     * cd /path/to/dir/

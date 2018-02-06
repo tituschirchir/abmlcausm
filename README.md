@@ -10,8 +10,7 @@ In this module, we aim to present an agent based modeling
     * Activate environment
         * **Linux**: source abmenv/bin/activate
         * **Windows**: source abmenv/Scripts/activate
-    * pip install -r requirements.txt --no-index --find-links file:///tmp/packages
+    * pip install -r requirements.txt
 * Run the program:
     * python app.py
     * Go to **http://127.0.0.1:8050/** to launch the dashboard
-

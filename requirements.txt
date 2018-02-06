@@ -1,12 +1,15 @@
 beautifulsoup4
 colorlover
 dash
+dash-renderer
+dash-html-components
+dash-core-components
+plotly
 Flask
 Mesa
 networkx
 numpy
 pandas
 pandas-datareader
-plotly
 Quandl
 yahoo-finance

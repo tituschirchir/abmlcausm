@@ -4,14 +4,8 @@ from scipy.stats import norm
 
 
 class BSMerton:
-    def __init__(self, args):
-        self.Type = int(args[0])
-        self.S = float(args[1])
-        self.K = float(args[2])
-        self.r = float(args[3])
-        self.q = float(args[4])
-        self.T = float(args[5]) / 365.0
-        self.sigma = float(args[6])
+    def __init__(self, Type, S, K, r, q, T, sigma):
+        self.Type, self.S, self.K, self.r, self.q, self.T, self.sigma = Type, S, K, r, q, T, sigma
         self.sigmaT = self.sigma * self.T ** 0.5
         self.d1 = (log(self.S / self.K) + (self.r - self.q + 0.5 * (self.sigma ** 2)) * self.T) / self.sigmaT
         self.d2 = self.d1 - self.sigmaT
@@ -56,12 +50,12 @@ class BSMerton:
         dfq = e ** (-self.q * self.T)
         if self.Type == 1:
             return (1.0 / 365.0) * -dfq * (
-            norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + (-self.q) * norm.cdf(
-                self.d1))
+                norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + (-self.q) * norm.cdf(
+                    self.d1))
         else:
             return (1.0 / 365.0) * -dfq * (
-            norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
-                -self.d1))
+                norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
+                    -self.d1))
 
     # Vanna for 1% change in vol
     def d_delta_d_vol(self):

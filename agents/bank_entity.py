@@ -15,7 +15,7 @@ class Bank(Vertex):
         self.inventories_assets = data['Inventories_A']
         self.other_curr_assets = data['Other_curr_A']
         self.other_liab = data['Other_L']
-        self.debt_liab = data['Debt_L']
+        self.debt_liab = data.Debt_L
         self.accPay_liab = data['AccPay_L']
         self.lt_liab = data['LT_L']
         self.equity = data['Equity']
@@ -24,8 +24,7 @@ class Bank(Vertex):
         self.to_shock = False
         self.bad_debt = 0.0
         self.contracts = []
-        self.stock = Stock(S=stock_data['current_price'], std=stock_data['annual_std'], mu=stock_data['annual_ret'],
-                           dt=1 / 252.0)
+        self.stock = Stock(S=stock_data['current_price'], std=stock_data['annual_std'], mu=stock_data.annual_ret, dt=1 / 252.0)
         self.stock_issue = self.equity / self.stock.S
 
     def equity_change(self):
@@ -53,11 +52,11 @@ class Bank(Vertex):
         self.to_shock = False
 
     def settle_contracts(self):
-        dead_c = [y for y in self.contracts if y.counter_party == "Dead"]
+        dead_c = [y.cash_A for y in self.contracts if y.counter_party.state == "Dead"]
         for j in dead_c:
             self.cash_A -= j.value()
             self.equity -= j.value()
-        self.contracts = [y for y in self.contracts if y.counter_party != "Dead"]
+        self.contracts = [y for y in self.contracts if y.counter_party.state != "Dead"]
         for x in self.contracts:
             self.cash_A -= x.premium()
             self.equity -= x.premium()

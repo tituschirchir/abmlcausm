@@ -39,6 +39,7 @@ class Loan(Contract):
     def get_premium(self):
         return self.rate * self.principal
 
+
 class Position:
     def __init__(self, contract, size, long, counter_party):
         self.long = long

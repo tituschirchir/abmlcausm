@@ -15,6 +15,7 @@ from data.meta_data import tickers
 from models.financial_model import FinancialModel
 
 app = dash.Dash()
+app.title = "Agent-Based Modeling"
 interval_t = 1 * 500
 initiated = False
 app.layout = html.Div([
@@ -201,4 +202,4 @@ def initialize(stocks, network_type):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=3434)

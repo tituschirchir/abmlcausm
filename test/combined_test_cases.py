@@ -3,6 +3,7 @@ import unittest
 import misc.implied_volatility as iv
 import misc.root_finders as rf
 import misc.tree_option_pricing as eabt
+from misc.heston import heston_call_closed_form
 from products.options import EuropeanOption
 
 
@@ -40,6 +41,10 @@ class TestBlackScholes(unittest.TestCase):
         est_vol = iv.implied_vol(C=19.386905422210063, S=100, K=99, T=3, r=.0142, Type=1, q=0.0)
         self.assertAlmostEqual(.25, est_vol, 7)
 
+    def test_area_calcs(self):
+        self.assertEqual(rf.simpson_rule(func1, 0, 2, 5), 6.0)
+        self.assertAlmostEqual(rf.trapezoid_rule(func1, 0, 2, 1000), 6.0, 2)
+
 
 class TestTreePricing(unittest.TestCase):
     def tree_euro_options(self, is_call=False, is_american=True, expected=0.0):
@@ -76,6 +81,19 @@ class TestTreePricing(unittest.TestCase):
         binomial = option.get_value(**kwargs)
 
         self.assertAlmostEqual(bsMerton.premium(), binomial, 1)
+
+
+class TestHeston(unittest.TestCase):
+    def heston_runner(self, K, kappa, theta=0.1, sigma=0.2, S0=1, lmd=0, rho=-0.3, V0=0.1, r=0, q=0, tau=5):
+        return round(heston_call_closed_form(theta, sigma, S0, lmd, rho, V0, r, q, tau, K, kappa), 5)
+
+    # test with values from Mikhailov's and Sergei's paper
+    def test_heston_call_closed_form(self):
+        self.assertListEqual([self.heston_runner(0.5, x) for x in [4, 2, 1]], [0.54228, 0.54285, 0.54364])
+        self.assertListEqual([self.heston_runner(0.75, x) for x in [4, 2, 1]], [0.38554, 0.3853, 0.38445])
+        self.assertListEqual([self.heston_runner(1, x) for x in [4, 2, 1]], [0.27521, 0.2739, 0.27112])
+        self.assertListEqual([self.heston_runner(1.25, x) for x in [4, 2, 1]], [0.19844, 0.19631, 0.1922])
+        self.assertListEqual([self.heston_runner(1.5, x) for x in [4, 2, 1]], [0.14483, 0.14221, 0.13749])
 
 
 if __name__ == '__main__':

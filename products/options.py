@@ -30,7 +30,7 @@ class EuropeanOption(Option):
             N = kwargs.get("N")
             res = eabt.euro_amer_binomial_tree(self.is_call, False, K=self.K, Tt=self.T, S0=self.S, r=self.r, N=N,
                                                sigma=self.sigma)
-            return res.loc[0]["0"]
+            return res
         return BSMerton(self.Type, self.S, self.K, self.r, self.q, self.T, self.sigma)
 
 

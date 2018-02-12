@@ -35,7 +35,7 @@ def binomial_tree_generic(payoff, replication, is_call=True, is_american=False, 
             if is_american:
                 opt_val.loc[j][str(i)] = max(opt_val.loc[j][str(i)], p_mult * (stock_val - K))
 
-    return opt_val
+    return opt_val.loc[0]["0"]
 
 
 def euro_amer_binomial_tree(is_call=True, is_american=False, K=20, Tt=1, S0=20, r=0.06, N=3, sigma=0.2):

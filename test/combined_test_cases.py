@@ -44,7 +44,7 @@ class TestBlackScholes(unittest.TestCase):
 class TestTreePricing(unittest.TestCase):
     def tree_euro_options(self, is_call=False, is_american=True, expected=0.0):
         values = eabt.euro_amer_binomial_tree(is_call, is_american, K=20, Tt=1, S0=20, r=0.06, N=3, sigma=0.2)
-        self.assertAlmostEqual(values.loc[0]["0"], expected, 5)
+        self.assertAlmostEqual(values, expected, 5)
 
     def test_european_call(self):
         self.tree_euro_options(True, False, 2.318398)
@@ -54,7 +54,7 @@ class TestTreePricing(unittest.TestCase):
 
     def tree_up_out_options(self, is_call=False, is_american=True, expected=0.0):
         values = eabt.up_and_out_binomial(is_call, is_american, K=10, Tt=0.3, S0=10, sigma=0.2, r=0.01, H=11, N=3)
-        self.assertAlmostEqual(values.loc[0]["0"], expected, 5)
+        self.assertAlmostEqual(values, expected, 5)
 
     def test_up_out_european_call(self):
         self.tree_up_out_options(True, False, 0.16014)

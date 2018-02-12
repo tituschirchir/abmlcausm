@@ -72,14 +72,12 @@ class TestTreePricing(unittest.TestCase):
         bsMerton = option.get_value()
         kwargs = {"is_tree": True, "N": 100}
         binomial = option.get_value(**kwargs)
-
         self.assertAlmostEqual(bsMerton.premium(), binomial, 1)
 
         option = EuropeanOption(Type=1, S=100, K=101, r=.0142, q=0.0, T=3, sigma=.25)
         bsMerton = option.get_value()
         kwargs = {"is_tree": True, "N": 100}
         binomial = option.get_value(**kwargs)
-
         self.assertAlmostEqual(bsMerton.premium(), binomial, 1)
 
 

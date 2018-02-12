@@ -13,6 +13,7 @@ def trinomial_tree_generic(payoff, replication, is_call, is_american, K, Tm, S, 
     cols = N + 1
     disc = exp(-r * dt)
     c_names = [str(x) for x in range(0, cols)]
+    p_mult = 1 if is_call else -1
 
     stocks = [S * exp((N - x) * dx) for x in range(0, rows)]
     stock = panda.DataFrame(data=0.0, columns=c_names, index=range(0, rows))
@@ -27,7 +28,7 @@ def trinomial_tree_generic(payoff, replication, is_call, is_american, K, Tm, S, 
                                                         pm, opt_val.loc[i][str(j + 1)],
                                                         pd, opt_val.loc[i + 1][str(j + 1)])
             if is_american:
-                opt_val.loc[i][str(j)] = max(opt_val.loc[i][str(j)], payoff(stock.loc[i][str(j)]))
+                opt_val.loc[i][str(j)] = max(opt_val.loc[i][str(j)], p_mult * (stock.loc[i][str(j)] - K))
     return opt_val.loc[N]["0"]
 
 

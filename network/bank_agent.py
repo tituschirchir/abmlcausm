@@ -74,4 +74,3 @@ class Bank(Vertex):
 
     def liquidity(self):
         return self.position_value() + self.equity
-

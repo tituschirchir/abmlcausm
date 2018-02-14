@@ -56,7 +56,7 @@ class BSMerton:
         else:
             return (1.0 / 365.0) * -dfq * (
                     norm.pdf(self.d1) * (
-                        (self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
+                    (self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
                 -self.d1))
 
     # Vanna for 1% change in vol

@@ -21,7 +21,7 @@ class TestBlackScholes(unittest.TestCase):
                         Theta=-0.009155689620436062, Rho=1.315457805912637, Vega=0.6526024039985233,
                         Gamma=0.008701365386646977, Phi=-1.897064968578939, Charm=-5.0181713513674874e-05,
                         Vanna=0.0014304927800286294, Vomma=0.0014304927800286294)
-        self.assertDictEqual(option.get_value().properties(), expected)
+        self.assertDictEqual(option.get_premium().properties(), expected)
 
     def test_put(self):
         option = EuropeanOption(Type=-1, S=100, K=99, r=.0142, q=0.0, T=3, sigma=.25)
@@ -30,7 +30,7 @@ class TestBlackScholes(unittest.TestCase):
                         Theta=-0.005464811284452482, Rho=-1.5306772489479392, Vega=0.6526024039985233,
                         Gamma=0.008701365386646977, Phi=1.102935031421061, Charm=-5.0181713513674874e-05,
                         Vanna=0.0014304927800286294, Vomma=0.0014304927800286294)
-        self.assertDictEqual(option.get_value().properties(), expected)
+        self.assertDictEqual(option.get_premium().properties(), expected)
 
     def test_bisection(self):
         bisct = rf.bisection(func1, a=-10, b=10, tol=0.0001)
@@ -71,15 +71,15 @@ class TestTreePricing(unittest.TestCase):
 
     def test_compare_binomial_with_bs(self):
         option = EuropeanOption(Type=-1, S=100, K=99, r=.0142, q=0.0, T=3, sigma=.25)
-        bsMerton = option.get_value()
+        bsMerton = option.get_premium()
         kwargs = {"is_tree": True, "N": 100}
-        binomial = option.get_value(**kwargs)
+        binomial = option.get_premium(**kwargs)
         self.assertAlmostEqual(bsMerton.premium(), binomial, 1)
 
         option = EuropeanOption(Type=1, S=100, K=101, r=.0142, q=0.0, T=3, sigma=.25)
-        bsMerton = option.get_value()
+        bsMerton = option.get_premium()
         kwargs = {"is_tree": True, "N": 100}
-        binomial = option.get_value(**kwargs)
+        binomial = option.get_premium(**kwargs)
         self.assertAlmostEqual(bsMerton.premium(), binomial, 1)
 
 

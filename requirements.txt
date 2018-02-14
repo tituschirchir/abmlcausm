@@ -1,5 +1,3 @@
-pandas
-misc
 bs4
 colorlover
 dash

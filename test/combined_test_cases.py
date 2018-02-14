@@ -3,7 +3,9 @@ import unittest
 import misc.implied_volatility as iv
 import misc.root_finders as rf
 import misc.tree_option_pricing as eabt
+from misc.finite_difference import explicit_finite_difference
 from misc.heston import heston_call_closed_form
+from misc.options_util import OptionTypes
 from products.options import EuropeanOption
 
 
@@ -92,6 +94,23 @@ class TestHeston(unittest.TestCase):
         self.assertListEqual([self.heston_runner(1, x) for x in [4, 2, 1]], [0.27521, 0.2739, 0.27112])
         self.assertListEqual([self.heston_runner(1.25, x) for x in [4, 2, 1]], [0.19844, 0.19631, 0.1922])
         self.assertListEqual([self.heston_runner(1.5, x) for x in [4, 2, 1]], [0.14483, 0.14221, 0.13749])
+
+
+class TestFiniteDifferenceMethods(unittest.TestCase):
+    def finite_diff_runner(self, is_call, is_american, flavor):
+        fd = explicit_finite_difference(is_call=is_call, is_american=is_american, flavor=flavor, K=100, Tm=1, S=100,
+                                        r=0.06, sig=0.25, N=3, div=0.03, dx=0.2)
+        return fd[str(0)].values
+
+    def test_explicit_finite_difference(self):
+        self.assertEqual(10.792942352920473, self.finite_diff_runner(True, True, OptionTypes.VANILLA)[3])
+        self.assertEqual(10.792942352920473, self.finite_diff_runner(True, False, OptionTypes.VANILLA)[3])
+        self.assertEqual(8.248140028322315, self.finite_diff_runner(False, True, OptionTypes.VANILLA)[3])
+        self.assertEqual(7.872837436899252, self.finite_diff_runner(False, False, OptionTypes.VANILLA)[3])
+        self.assertEqual(0.0, self.finite_diff_runner(True, True, OptionTypes.UP_AND_OUT)[3])
+        self.assertEqual(0.0, self.finite_diff_runner(True, False, OptionTypes.UP_AND_OUT)[3])
+        self.assertEqual(0.0, self.finite_diff_runner(False, True, OptionTypes.UP_AND_OUT)[3])
+        self.assertEqual(0.0, self.finite_diff_runner(False, False, OptionTypes.UP_AND_OUT)[3])
 
 
 if __name__ == '__main__':

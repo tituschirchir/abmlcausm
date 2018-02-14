@@ -14,6 +14,7 @@ class Derivative(Contract):
         self.leverage = leverage
         self.name = name
 
+
     def get_value(self):
         mult = random.random()
         div = random.random()

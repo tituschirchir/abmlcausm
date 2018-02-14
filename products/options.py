@@ -2,13 +2,6 @@ from misc.black_scholes import BSMerton
 import misc.tree_option_pricing as eabt
 from enum import Enum
 
-
-class OptionTypes(Enum):
-    EURO = "European"
-    AMERICAN = "American"
-    EXOTIC = "Exotic"
-
-
 class Option:
     def __init__(self, name, Type, S, K, r, q, T, sigma):
         self.name = name

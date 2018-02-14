@@ -1,4 +1,5 @@
 from cmath import exp, log, sqrt, pi
+
 from misc.root_finders import simpson_rule
 
 '''
@@ -19,7 +20,7 @@ def heston_call_closed_form(theta=0.1, sigma=0.2, S0=1, lmd=0, rho=-0.3, V0=0.1,
         d = sqrt((rho * sigma * phi * 1j - b) ** 2 - (sigma ** 2) * (2 * u * phi * 1j - phi ** 2))
         g = (b - rho * sigma * phi * 1j + d) / (b - rho * sigma * phi * 1j - d)
         C = (r - q) * phi * 1j * tau + (kappa * theta / (sigma ** 2)) * (
-            (b - rho * sigma * phi * 1j + d) * tau - 2 * log((1 - g * exp(d * tau)) / (1 - g)))
+                (b - rho * sigma * phi * 1j + d) * tau - 2 * log((1 - g * exp(d * tau)) / (1 - g)))
         D = ((b - rho * sigma * phi * 1j + d) / (sigma ** 2)) * ((1 - exp(d * tau)) / (1 - g * exp(d * tau)))
         psi = exp(C + D * V0 + 1j * phi * log(S0 * exp(r * tau)))
         return ((exp(-1j * phi * log(K)) * psi) / (1j * phi)).real

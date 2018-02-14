@@ -1,8 +1,8 @@
-from scipy.stats import norm
 from math import sqrt, exp, log
 
-from misc.black_scholes import BSMerton
+from scipy.stats import norm
 
+from misc.black_scholes import BSMerton
 # Value of option using explicit functions defined by Niklas Waterman ----
 from misc.tree_option_pricing import euro_amer_binomial_tree, up_and_out_binomial
 
@@ -59,4 +59,4 @@ def explicit_up_and_in_american_put_option(S=10, K=10, tau=0.3, r=0.01, vol=0.2,
         return vanilla_euro_put(S0, Tt, K) - up_out
 
     return (S / H) ** (1 - 2 * (r - div) / vol ** 2) * (
-    vanilla_american_put(H ** 2 / S, tau, K) - vanilla_euro_put(H ** 2 / S, tau, K)) + up_and_in_eu_put(S, tau)
+            vanilla_american_put(H ** 2 / S, tau, K) - vanilla_euro_put(H ** 2 / S, tau, K)) + up_and_in_eu_put(S, tau)

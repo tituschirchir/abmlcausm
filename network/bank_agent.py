@@ -1,8 +1,8 @@
-import random
-
 import math
-from helpers.graphical import Vertex
+
 import numpy as np
+
+from network.network_structure import Vertex
 
 
 class Bank(Vertex):
@@ -24,7 +24,8 @@ class Bank(Vertex):
         self.to_shock = False
         self.bad_debt = 0.0
         self.contracts = []
-        self.stock = Stock(S=stock_data['current_price'], std=stock_data['annual_std'], mu=stock_data.annual_ret, dt=1 / 252.0)
+        self.stock = Stock(S=stock_data['current_price'], std=stock_data['annual_std'], mu=stock_data.annual_ret,
+                           dt=1 / 252.0)
         self.stock_issue = self.equity / self.stock.S
 
     def equity_change(self):
@@ -52,7 +53,7 @@ class Bank(Vertex):
         self.to_shock = False
 
     def settle_contracts(self):
-        dead_c = [y.cash_A for y in self.contracts if y.counter_party.state == "Dead"]
+        dead_c = [y for y in self.contracts if y.counter_party.state == "Dead"]
         for j in dead_c:
             self.cash_A -= j.value()
             self.equity -= j.value()

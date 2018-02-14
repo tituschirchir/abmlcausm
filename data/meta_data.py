@@ -7,6 +7,11 @@ tickers = {"Goldman Sachs": 'GS',
            "Wells Fargo": "WFC",
            'Citigroup': 'C',
            'U.S. Bancorp': "USB",
+           'Apple Inc': "AAPL",
+           'Advanced Microdevices': "AMD",
+           'Amazon': "AMZN",
+           'American Investment Group': "AIG",
+           'Johnson and Johnson': "JNJ",
            'PNC Financial Services Group Inc': 'PNC'}
 
 kawai = "Kamada Kawai"

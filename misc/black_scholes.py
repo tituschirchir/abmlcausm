@@ -12,9 +12,9 @@ class BSMerton:
 
     def premium(self):
         tmpprem = self.Type * (
-            self.S * e ** (-self.q * self.T) * norm.cdf(self.Type * self.d1) - self.K * e ** (
+                self.S * e ** (-self.q * self.T) * norm.cdf(self.Type * self.d1) - self.K * e ** (
                 -self.r * self.T) * norm.cdf(
-                self.Type * self.d2))
+            self.Type * self.d2))
         return tmpprem
 
     def delta(self):
@@ -31,8 +31,8 @@ class BSMerton:
         dfq = e ** (-self.q * self.T)
         tmptheta = (1.0 / 365.0) \
                    * (-0.5 * self.S * dfq * norm.pdf(self.d1) * self.sigma / (self.T ** 0.5) + self.Type * (
-            self.q * self.S * dfq * norm.cdf(self.Type * self.d1) - self.r * self.K * df * norm.cdf(
-                self.Type * self.d2)))
+                self.q * self.S * dfq * norm.cdf(self.Type * self.d1) - self.r * self.K * df * norm.cdf(
+            self.Type * self.d2)))
         return tmptheta
 
     def rho(self):
@@ -50,12 +50,14 @@ class BSMerton:
         dfq = e ** (-self.q * self.T)
         if self.Type == 1:
             return (1.0 / 365.0) * -dfq * (
-                norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + (-self.q) * norm.cdf(
-                    self.d1))
+                    norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + (
+                -self.q) * norm.cdf(
+                self.d1))
         else:
             return (1.0 / 365.0) * -dfq * (
-                norm.pdf(self.d1) * ((self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
-                    -self.d1))
+                    norm.pdf(self.d1) * (
+                        (self.r - self.q) / (self.sigmaT) - self.d2 / (2 * self.T)) + self.q * norm.cdf(
+                -self.d1))
 
     # Vanna for 1% change in vol
     def d_delta_d_vol(self):

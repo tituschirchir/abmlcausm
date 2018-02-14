@@ -1,8 +1,7 @@
 import os
-import pandas as pd
 import urllib as u
 
-import sys
+import pandas as pd
 from bs4 import BeautifulSoup as bs
 
 

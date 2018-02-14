@@ -4,9 +4,10 @@ import random
 import pandas as pd
 from mesa.time import StagedActivation
 
-from agents.bank_entity import Bank
-from helpers.graphical import Graph
-from products.contracts import Derivative, Position
+from network.bank_agent import Bank
+from network.network_structure import Graph
+from products.derivatives import Derivative
+from products.positions import Position
 
 
 class FinancialModel(Graph):

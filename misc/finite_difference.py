@@ -1,5 +1,7 @@
 from math import exp
+
 import pandas as panda
+
 from misc import options_util
 
 
@@ -25,7 +27,8 @@ def explicit_finite_difference(is_call, is_american, flavor, K, Tm, S, r, sig, N
             opt_val.loc[j][str(i)] = pu * opt_val.loc[j - 1][str(i + 1)] + \
                                      pm * opt_val.loc[j][str(i + 1)] + \
                                      pd * opt_val.loc[j + 1][str(i + 1)]
-        stock_term = (stock.loc[0][str(N)] - stock.loc[1][str(N)]) if is_call else (stock.loc[rows - 2][str(N)] - stock.loc[rows-1][str(N)])
+        stock_term = (stock.loc[0][str(N)] - stock.loc[1][str(N)]) if is_call else (
+                    stock.loc[rows - 2][str(N)] - stock.loc[rows - 1][str(N)])
         opt_val.loc[rows - 1][str(i)] = opt_val.loc[rows - 2][str(i)] + (0 if is_call else stock_term)
         opt_val.loc[0][str(i)] = opt_val.loc[0 + 1][str(i)] + (stock_term if is_call else 0)
 

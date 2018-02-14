@@ -1,8 +1,6 @@
-import random
-
-from mesa import Agent, Model
-import pandas as pd
 import networkx as nx
+import pandas as pd
+from mesa import Agent, Model
 
 
 class Vertex(Agent):

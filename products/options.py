@@ -1,6 +1,6 @@
-from misc.black_scholes import BSMerton
 import misc.tree_option_pricing as eabt
-from enum import Enum
+from misc.black_scholes import BSMerton
+
 
 class Option:
     def __init__(self, name, Type, S, K, r, q, T, sigma):

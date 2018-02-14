@@ -1,9 +1,11 @@
 import datetime
+
 import colorlover as cl
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import networkx as nx
+import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from plotly.graph_objs import *
@@ -12,12 +14,11 @@ import helpers.data_downloader as dd
 import helpers.data_scraper as ds
 from data.meta_data import network_layouts, layouts, kawai, network_types
 from data.meta_data import tickers
-from models.financial_model import FinancialModel
+from network.financial_model import FinancialModel
 
 app = dash.Dash()
 app.title = "Agent-Based Modeling"
 interval_t = 1 * 500
-initiated = False
 app.layout = html.Div([
     html.P(
         hidden='',
@@ -78,7 +79,6 @@ def cache_raw_data(tickers, network_type):
     global model, data2, end, colors_c, stocks, initiated
     model, data2, end, colors_c, stocks = initialize(tickers, network_type)
     print('Loaded raw data')
-    initiated = True
     return 'loaded'
 
 
@@ -89,7 +89,7 @@ def cache_raw_data(tickers, network_type):
 def update_graph_live(hidden, i):
     graphs = []
     layout = []
-    if initiated:
+    if hidden == 'loaded':
         all_agents = model.all_agents.sort_index(axis=1)
         graphs = []
         ic = 0
@@ -118,7 +118,7 @@ def update_graph_live(hidden, i):
                Input('raw_container', 'hidden')])
 def update_graph_live(n, hidden):
     fig = []
-    if initiated:
+    if hidden == 'loaded':
         banks = model.schedule.agents
         banks = sorted(banks, key=lambda bank: bank.ticker, reverse=False)
         labels = [x.ticker for x in banks]
@@ -142,7 +142,7 @@ def update_graph_live(n, hidden):
                Input('network-layout-input', 'value')])
 def update_graph_live(n, hidden, network_layout):
     fig = Figure()
-    if initiated:
+    if hidden == 'loaded':
         model.step()
         model_graph = model.graph
         banks = list(nx.get_node_attributes(model_graph, 'bank').values())
@@ -191,9 +191,10 @@ def update_graph_live(n, hidden, network_layout):
 def initialize(stocks, network_type):
     dt = 1 / 252.0
     end = datetime.date.today()
+    s_l = len(stocks)
     stocks.sort(reverse=False)
-    set_c = 'Set3' if len(stocks) > 9 else 'Set1'
-    colors_c = cl.scales[str(len(stocks))]['qual'][set_c]
+    colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], s_l * 20)))
+    colors_c = np.asarray(colors_)[np.arange(0, s_l * 20, 20)]
     start = datetime.datetime(2016, 1, 1)
     data2 = ds.scrape_balance_sheet_data(qt=2, stock_list=stocks)
     stock_data = dd.download_data(start, end, stocks)

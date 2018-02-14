@@ -1,31 +1,27 @@
-import math
-
-import numpy as np
-
 from network.network_structure import Vertex
+from products.equities import Stock
 
 
 class Bank(Vertex):
     def __init__(self, unique_id, ticker, data, stock_data, model):
         super().__init__(unique_id, model)
         self.ticker = ticker
-        self.lt_assets = data['LT_A']
-        self.cash_A = data['cash_A']
-        self.accRec_A = data['AccRec_A']
-        self.inventories_assets = data['Inventories_A']
-        self.other_curr_assets = data['Other_curr_A']
-        self.other_liab = data['Other_L']
+        self.lt_assets = data.LT_A
+        self.cash_A = data.cash_A
+        self.accRec_A = data.AccRec_A
+        self.inventories_assets = data.Inventories_A
+        self.other_curr_assets = data.Other_curr_A
+        self.other_liab = data.Other_L
         self.debt_liab = data.Debt_L
-        self.accPay_liab = data['AccPay_L']
-        self.lt_liab = data['LT_L']
-        self.equity = data['Equity']
+        self.accPay_liab = data.AccPay_L
+        self.lt_liab = data.LT_L
+        self.equity = data.Equity
         self.state = 'Alive'
         self.shock_quantity = 0.0
         self.to_shock = False
         self.bad_debt = 0.0
         self.contracts = []
-        self.stock = Stock(S=stock_data['current_price'], std=stock_data['annual_std'], mu=stock_data.annual_ret,
-                           dt=1 / 252.0)
+        self.stock = Stock(S=stock_data.current_price, std=stock_data.annual_std, mu=stock_data.annual_ret, dt=1. / 252)
         self.stock_issue = self.equity / self.stock.S
 
     def equity_change(self):
@@ -79,15 +75,3 @@ class Bank(Vertex):
     def liquidity(self):
         return self.position_value() + self.equity
 
-
-class Stock:
-    def __init__(self, S, mu, std, dt):
-        self.mu = mu
-        self.S = S
-        self.sigma = std
-        self.dt = dt
-
-    def evolve(self):
-        pt_a = (self.mu - (self.sigma ** 2) / 2) * self.dt
-        pt_b = self.sigma * math.sqrt(self.dt) * np.random.randn()
-        self.S = self.S * math.exp(pt_a + pt_b)

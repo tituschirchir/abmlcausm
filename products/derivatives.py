@@ -19,3 +19,17 @@ class Derivative(Contract):
 
     def get_premium(self):
         return self.premium
+
+
+class Option(Derivative):
+    def __init__(self, name, Type, S, K, r, q, T, sigma):
+        super().__init__(name, 0.0, 0.0, 1)
+        self.name = name
+        self.Type, self.S, self.K, self.r, self.q, self.T, self.sigma = Type, S, K, r, q, T, sigma
+        self.is_call = Type == 1
+
+    def get_value(self):
+        pass
+
+    def get_premium(self):
+        pass

@@ -35,16 +35,18 @@ class Graph(Model):
         self.adjacency_matrix = []
 
     def initialize_adjacency_matrix(self):
-        colnames = [x.ticker for x in self.schedule.agents]
+        agents = self.schedule.agents
+        agents = sorted(agents, key=lambda bank: bank.equity, reverse=True)
+        colnames = [x.ticker for x in agents]
         self.adjacency_matrix = pd.DataFrame(0, columns=colnames, index=colnames)
-        for entity in self.schedule.agents:
+        for entity in agents:
             self.graph.add_node(entity.ticker, bank=entity, weight=entity.equity)
 
-        for i in range(0, len(self.schedule.agents)):
+        for i in range(0, len(agents)):
             adjs = list(self.graph_model._adj[i].keys())
-            tk = self.schedule.agents[i]
+            tk = agents[i]
             for j in adjs:
-                other_agent = self.schedule.agents[j]
+                other_agent = agents[j]
                 self.adjacency_matrix.loc[tk.ticker, other_agent.ticker] = 1
                 self.graph.add_edge(tk.ticker, other_agent.ticker)
                 tk.add_neighbor(other_agent, 1)

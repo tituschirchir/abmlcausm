@@ -146,6 +146,7 @@ def update_graph_live(n, hidden, network_layout):
         model.step()
         model_graph = model.graph
         banks = list(nx.get_node_attributes(model_graph, 'bank').values())
+        txt = [x.ticker for x in banks]
         equities = [x.equity for x in banks]
         equities = equities / sum(equities)
         mx_eq = max(equities)
@@ -160,12 +161,12 @@ def update_graph_live(n, hidden, network_layout):
             else:
                 node_colors.append('rgb(14, 209, 53)')
         edge_trace = Scatter(x=[], y=[], line=Line(width=2.5, color='#888'), hoverinfo='none', mode='lines')
-        node_trace = Scatter(x=[], y=[], text=stocks, mode='markers+text+value', hoverinfo='text', marker=Marker(
+        node_trace = Scatter(x=[], y=[], text=txt, mode='markers+text+value', hoverinfo='text', marker=Marker(
             color=node_colors,
             size=equities,
             line=dict(width=2)))
 
-        for st in stocks:
+        for st in txt:
             x0, y0 = pos[st]
             node_trace['x'].append(x0)
             node_trace['y'].append(y0)

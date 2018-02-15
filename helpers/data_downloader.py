@@ -74,6 +74,3 @@ def download_balancesheet():
     liab = liab.fillna(0.0)
     equities = equities.fillna(0.0)
     return assets, liab, equities
-
-
-print(download_balancesheet())

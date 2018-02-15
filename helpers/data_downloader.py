@@ -31,51 +31,55 @@ def download_data(start, end, stocks_list, lag=1):
 
 
 def download_balancesheet(tickers):
-    assets, liab, equities = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-    for tkr in tickers:
-        assets2, liab2, equities2 = pd.DataFrame(columns=[tkr]), pd.DataFrame(columns=[tkr]), pd.DataFrame(
-            columns=[tkr])
-        download = requests.get(
-            'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'.format(
-                tkr))
-        decoded_content = download.content.decode('utf-8')
-        cr = csv.reader(decoded_content.splitlines(), delimiter=',')
-        my_list = list(cr)[2:]
-        is_reached = True
-        arr_v = []
-        for i in range(0, len(my_list)):
-            val = my_list[i]
-            if val[0] == "Assets":
-                arr_v.append(i + 1)
-            elif val[0] == "Liabilities":
-                arr_v.append(i + 1)
-            elif val[0] == "Stockholders' equity":
-                arr_v.append(i + 1)
-        i = 0
-        for row in my_list:
-            if len(row) == 1 and is_reached:
-                is_reached = False
-            elif len(row) > 1 and "Total" not in row[0]:
-                value = 0.0 if row[-1] == '' else float(row[-1])
-                if i < arr_v[1]:
-                    assets2.loc[row[0]] = [value]
-                elif i >= arr_v[2]:
-                    equities2.loc[row[0]] = [value]
-                else:
-                    liab2.loc[row[0]] = [value]
-                is_reached = True
-            i += 1
-        equities = equities.join(equities2, how='outer')
-        liab = liab.join(liab2, how='outer')
-        assets = assets.join(assets2, how='outer')
+    xf = "data/bs_ms.csv"
+    if os.path.isfile(xf):
+        bs = pd.read_csv(xf, index_col=0)
+    else:
+        assets, liab, equities = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+        for tkr in tickers:
+            assets2, liab2, equities2 = pd.DataFrame(columns=[tkr]), pd.DataFrame(columns=[tkr]), pd.DataFrame(
+                columns=[tkr])
+            download = requests.get(
+                'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'.format(
+                    tkr))
+            decoded_content = download.content.decode('utf-8')
+            cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+            my_list = list(cr)[2:]
+            is_reached = True
+            arr_v = []
+            for i in range(0, len(my_list)):
+                val = my_list[i]
+                if val[0] == "Assets":
+                    arr_v.append(i + 1)
+                elif val[0] == "Liabilities":
+                    arr_v.append(i + 1)
+                elif val[0] == "Stockholders' equity":
+                    arr_v.append(i + 1)
+            i = 0
+            for row in my_list:
+                if len(row) == 1 and is_reached:
+                    is_reached = False
+                elif len(row) > 1 and "Total" not in row[0]:
+                    value = 0.0 if row[-1] == '' else float(row[-1])
+                    if i < arr_v[1]:
+                        assets2.loc[row[0]] = [value]
+                    elif i >= arr_v[2]:
+                        equities2.loc[row[0]] = [value]
+                    else:
+                        liab2.loc[row[0]] = [value]
+                    is_reached = True
+                i += 1
+            equities = equities.join(equities2, how='outer')
+            liab = liab.join(liab2, how='outer')
+            assets = assets.join(assets2, how='outer')
 
-    assets['Category'] = ["A"] * assets.shape[0]
-    liab['Category'] = ["L"] * liab.shape[0]
-    equities['Category'] = ["E"] * equities.shape[0]
-    assets = assets.fillna(0.0)
-    liab = liab.fillna(0.0)
-    equities = equities.fillna(0.0)
-    bs = pd.concat([assets, liab, equities])
-    bs = bs.drop(['Net loans'])
-
+        assets['Category'] = ["A"] * assets.shape[0]
+        liab['Category'] = ["L"] * liab.shape[0]
+        equities['Category'] = ["E"] * equities.shape[0]
+        assets = assets.fillna(0.0)
+        liab = liab.fillna(0.0)
+        equities = equities.fillna(0.0)
+        bs = pd.concat([assets, liab, equities])
+        bs = bs.drop(['Net loans'])
+        bs.to_csv('data/bs_ms.csv')
     return bs

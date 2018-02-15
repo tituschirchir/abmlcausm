@@ -4,6 +4,7 @@ import os
 
 import pandas as pd
 import pandas_datareader as web
+import requests
 
 import data.meta_data as md
 
@@ -29,14 +30,11 @@ def download_data(start, end, stocks_list, lag=1):
     return stats.ix[stocks_list], stocks[stocks_list]
 
 
-def download_balancesheet():
-    import requests
-    tickers = ['BAC', 'TWTR', 'FB', 'GS', 'MS']
+def download_balancesheet(tickers):
     assets, liab, equities = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for tkr in tickers:
         assets2, liab2, equities2 = pd.DataFrame(columns=[tkr]), pd.DataFrame(columns=[tkr]), pd.DataFrame(
             columns=[tkr])
-        res2 = pd.DataFrame(columns=[tkr])
         download = requests.get(
             'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'.format(
                 tkr))
@@ -57,7 +55,7 @@ def download_balancesheet():
         for row in my_list:
             if len(row) == 1 and is_reached:
                 is_reached = False
-            elif len(row) > 1:
+            elif len(row) > 1 and "Total" not in row[0]:
                 value = 0.0 if row[-1] == '' else float(row[-1])
                 if i < arr_v[1]:
                     assets2.loc[row[0]] = [value]
@@ -70,7 +68,14 @@ def download_balancesheet():
         equities = equities.join(equities2, how='outer')
         liab = liab.join(liab2, how='outer')
         assets = assets.join(assets2, how='outer')
+
+    assets['Category'] = ["A"] * assets.shape[0]
+    liab['Category'] = ["L"] * liab.shape[0]
+    equities['Category'] = ["E"] * equities.shape[0]
     assets = assets.fillna(0.0)
     liab = liab.fillna(0.0)
     equities = equities.fillna(0.0)
-    return assets, liab, equities
+    bs = pd.concat([assets, liab, equities])
+    bs = bs.drop(['Net loans'])
+
+    return bs

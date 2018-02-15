@@ -40,8 +40,8 @@ class FinancialModel(Graph):
         # Shock!
         if self.shock == 0.0:
             unlucky_agent = random.choice([x for x in self.schedule.agents if x.state in ["Alive", "Infected"]])
-            if random.random() > 0.5:
-                unlucky_agent.shock_quantity = 250000000.0
+            if random.random() > 0.95:
+                unlucky_agent.shock_quantity = 100000000.0
                 unlucky_agent.state = 'Infected'
                 print("Unlucky agent is {}".format(unlucky_agent.ticker))
         self.prep_for_shock()

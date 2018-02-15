@@ -198,6 +198,7 @@ def initialize(stocks, network_type):
     colors_c = np.asarray(colors_)[np.arange(0, s_l * 20, 20)]
     start = datetime.datetime(2016, 1, 1)
     data2 = ds.scrape_balance_sheet_data(qt=2, stock_list=stocks)
+    dd.download_balancesheet(tickers=stocks)
     stock_data = dd.download_data(start, end, stocks)
     model = FinancialModel(data2, stock_data, dt=dt, network_type=network_type)
     return model, data2, end, colors_c, stocks

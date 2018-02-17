@@ -205,4 +205,5 @@ def initialize(stocks, network_type):
 
 
 if __name__ == '__main__':
+    cache_raw_data(tickers=[j for i, j in tickers.items()], network_type="Barabasi")
     app.run_server(debug=True, port=3434)

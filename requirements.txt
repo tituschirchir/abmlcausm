@@ -5,5 +5,5 @@ dash-renderer
 dash-html-components
 dash-core-components
 scipy
-networkx
+networkx==2.1
 pandas-datareader

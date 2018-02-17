@@ -1,6 +1,6 @@
 import networkx as nx
 import pandas as pd
-from mesa import Agent, Model
+from network.components import Agent, Model
 
 
 class Vertex(Agent):

@@ -2,7 +2,7 @@ import datetime
 import random
 
 import pandas as pd
-from mesa.time import StagedActivation
+from network.scheduler import StagedActivation
 
 from network.bank_agent import Bank
 from network.network_structure import Graph

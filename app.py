@@ -9,7 +9,7 @@ import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from plotly.graph_objs import *
-
+from network import bank_agent as ba
 import helpers.data_downloader as dd
 import helpers.data_scraper as ds
 from data.meta_data import network_layouts, layouts, kawai, network_types
@@ -85,53 +85,45 @@ def cache_raw_data(tickers, network_type):
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph-scatter', 'figure'),
-              [Input('raw_container', 'hidden'),
-               Input('interval-component', 'n_intervals')])
-def update_graph_live(hidden, i):
+              [Input('interval-component', 'n_intervals')])
+def update_graph_live(i):
+    all_agents = model.all_agents.sort_index(axis=1)
     graphs = []
-    layout = []
-    if hidden == 'loaded':
-        all_agents = model.all_agents.sort_index(axis=1)
-        graphs = []
-        ic = 0
-        for fx in data2.index:
-            graphs.append(go.Scatter(
-                x=all_agents.index,
-                y=all_agents[fx],
-                mode='lines',
-                name=fx,
-                marker=dict(
-                    color=colors_c[ic],
-                    line=dict(
-                        width=2,
-                        color=colors_c[ic]
-                    ))
-            ))
-            ic += 1
-        layout = dict(xaxis=dict(title='Date'), yaxis=dict(title='Cash in Hand'), )
-    fig = dict(data=graphs, layout=layout)
-    return fig
+    ic = 0
+    for fx in data2.index:
+        graphs.append(go.Scatter(
+            x=all_agents.index,
+            y=all_agents[fx],
+            mode='lines',
+            name=fx,
+            marker=dict(
+                color=colors_c[ic],
+                line=dict(
+                    width=2,
+                    color=colors_c[ic]
+                ))
+        ))
+        ic += 1
+    layout = dict(xaxis=dict(title='Date'), yaxis=dict(title='Cash in Hand'), )
+    return dict(data=graphs, layout=layout)
 
 
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph', 'figure'),
-              [Input('interval-component', 'n_intervals'),
-               Input('raw_container', 'hidden')])
-def update_graph_live(n, hidden):
-    fig = []
-    if hidden == 'loaded':
-        banks = model.schedule.agents
-        banks = sorted(banks, key=lambda bank: bank.ticker, reverse=False)
-        labels = [x.ticker for x in banks]
-        values = [x.cash_A for x in banks]
-        layout = dict(xaxis=dict(title='Date'),
-                      yaxis=dict(title='Cash in Hand'),
-                      showlegend=False)
+              [Input('interval-component', 'n_intervals')])
+def update_graph_live(n):
+    banks = model.schedule.agents
+    banks = sorted(banks, key=lambda bank: bank.ticker, reverse=False)
+    labels = [x.ticker for x in banks]
+    values = [x.cash_A for x in banks]
+    layout = dict(xaxis=dict(title='Date'),
+                  yaxis=dict(title='Cash in Hand'),
+                  showlegend=False)
 
-        trace = go.Pie(labels=labels, values=values, hole=.25, pull=.005, sort=False, textinfo='percent+label',
-                       marker=dict(colors=colors_c))
+    trace = go.Pie(labels=labels, values=values, hole=.25, pull=.005, sort=False, textinfo='percent+label',
+                   marker=dict(colors=colors_c))
 
-        fig = dict(data=[trace], layout=layout)
+    fig = dict(data=[trace], layout=layout)
 
     return fig
 
@@ -139,55 +131,45 @@ def update_graph_live(n, hidden):
 # Multiple components can update everytime interval gets fired.
 @app.callback(Output('live-update-graph-network', 'figure'),
               [Input('interval-component', 'n_intervals'),
-               Input('raw_container', 'hidden'),
                Input('network-layout-input', 'value')])
-def update_graph_live(n, hidden, network_layout):
-    fig = Figure()
-    if hidden == 'loaded':
-        model.step()
-        model_graph = model.graph
-        banks = list(nx.get_node_attributes(model_graph, 'bank').values())
-        txt = [x.ticker for x in banks]
-        equities = [x.equity for x in banks]
-        equities = equities / sum(equities)
-        mx_eq = max(equities)
-        equities = equities * 50 / mx_eq + 25
-        pos = network_layouts[network_layout](model_graph)
-        node_colors = []
-        for x in banks:
-            if x.state == 'Infected':
-                node_colors.append('rgb(244, 194, 66)')
-            elif x.state == 'Dead':
-                node_colors.append('rgb(237, 14, 14)')
-            else:
-                node_colors.append('rgb(14, 209, 53)')
-        edge_trace = Scatter(x=[], y=[], line=Line(width=2.5, color='#888'), hoverinfo='none', mode='lines')
-        node_trace = Scatter(x=[], y=[], text=txt, mode='markers+text+value', hoverinfo='text', marker=Marker(
-            color=node_colors,
-            size=equities,
-            line=dict(width=2)))
+def update_graph_live(n, network_layout):
+    model.step()
+    model_graph = model.graph
+    banks = list(nx.get_node_attributes(model_graph, 'bank').values())
+    txt = [x.ticker for x in banks]
+    equities = [x.equity for x in banks]
+    equities = equities / sum(equities)
+    mx_eq = max(equities)
+    equities = equities * 50 / mx_eq + 25
+    pos = network_layouts[network_layout](model_graph)
+    orange, red, green = 'rgb(244, 194, 66)', 'rgb(237, 14, 14)', 'rgb(14, 209, 53)'
+    node_colors = [orange if x.state == ba.infected else (red if x.state == ba.dead else green) for x in banks]
+    edge_trace = Scatter(x=[], y=[], line=Line(width=2.5, color='#888'), hoverinfo='none', mode='lines')
+    node_trace = Scatter(x=[], y=[], text=txt, mode='markers+text+value', hoverinfo='text', marker=Marker(
+        color=node_colors,
+        size=equities,
+        line=dict(width=2)))
 
-        for st in txt:
-            x0, y0 = pos[st]
-            node_trace['x'].append(x0)
-            node_trace['y'].append(y0)
-            neighbors = list(model_graph.edges._adjdict[st].keys())
-            for nei in neighbors:
-                x1, y1 = pos[nei]
-                edge_trace['x'] += [x0, x1, None]
-                edge_trace['y'] += [y0, y1, None]
+    for st in txt:
+        x0, y0 = pos[st]
+        node_trace['x'].append(x0)
+        node_trace['y'].append(y0)
+        neighbors = list(model_graph.edges._adjdict[st].keys())
+        for nei in neighbors:
+            x1, y1 = pos[nei]
+            edge_trace['x'] += [x0, x1, None]
+            edge_trace['y'] += [y0, y1, None]
 
-        fig = Figure(data=Data([edge_trace, node_trace]),
-                     layout=Layout(
-                         titlefont=dict(size=16),
-                         showlegend=False,
-                         title='Residual shock: {};.<br> Dead: {} <br> Bad Debt: {}'
-                             .format(model.shock, model.dead, model.total_bad_debt()),
-                         hovermode='closest',
-                         margin=dict(b=20, l=5, r=5, t=40),
-                         xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
-                         yaxis=YAxis(showgrid=False, zeroline=False, showticklabels=False)))
-    return fig
+    return Figure(data=Data([edge_trace, node_trace]),
+                  layout=Layout(
+                      titlefont=dict(size=16),
+                      showlegend=False,
+                      title='Residual shock: {};.<br> Dead: {} <br> Bad Debt: {}'
+                          .format(model.shock, model.dead, model.total_bad_debt()),
+                      hovermode='closest',
+                      margin=dict(b=20, l=5, r=5, t=40),
+                      xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
+                      yaxis=YAxis(showgrid=False, zeroline=False, showticklabels=False)))
 
 
 def initialize(stocks, network_type):

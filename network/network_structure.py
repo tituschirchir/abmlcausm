@@ -20,10 +20,6 @@ class Vertex(Agent):
     def solvent_neighbors_to(self):
         return [x for x in self.neighbors_to if x.state in ['Alive', 'Infected']]
 
-    def neighbor_as_list(self):
-        return [x.ticker for x in self.neighbors_to]
-
-
 class Graph(Model):
     def __init__(self, network_type, n):
         super().__init__()

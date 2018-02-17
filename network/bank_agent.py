@@ -1,6 +1,10 @@
 from network.network_structure import Vertex
 from products.equities import Stock
 
+alive = "Alive"
+dead = "Dead"
+infected = "Infected"
+
 
 class Bank(Vertex):
     def __init__(self, unique_id, ticker, data, stock_data, model):
@@ -16,7 +20,7 @@ class Bank(Vertex):
         self.accPay_liab = data.AccPay_L
         self.lt_liab = data.LT_L
         self.equity = data.Equity
-        self.state = 'Alive'
+        self.state = alive
         self.shock_quantity = 0.0
         self.to_shock = False
         self.bad_debt = 0.0
@@ -27,7 +31,7 @@ class Bank(Vertex):
     def equity_change(self):
         if self.to_shock:
             self.shock()
-        if self.state != 'Dead':
+        if self.state != dead:
             self.stock.evolve()
             init_eq = self.equity
             self.equity = self.stock.S * self.stock_issue
@@ -39,7 +43,7 @@ class Bank(Vertex):
             residual = self.shock_quantity - self.equity
             self.cash_A = 0.0
             self.equity = 0.0
-            self.state = "Dead"
+            self.state = dead
             self.infect_neighborhood(residual)
             self.shock_quantity = 0.0
         else:
@@ -65,7 +69,7 @@ class Bank(Vertex):
             for sn in solvent_neighbors:
                 shared_loss = residual / num
                 sn.shock_quantity += shared_loss
-                sn.state = 'Infected'
+                sn.state = infected
         else:
             self.bad_debt += residual
 

@@ -62,4 +62,5 @@ class StagedActivation(BaseScheduler):
             if self.shuffle_between_stages:
                 random.shuffle(self.agents)
             self.time += self.stage_time
+
         self.steps += 1

@@ -18,6 +18,7 @@ from network.financial_model import FinancialModel
 
 app = dash.Dash()
 app.title = "Agent-Based Modeling"
+def_tickers = [j for i, j in tickers.items()][1:4]
 interval_t = 1 * 500
 app.layout = html.Div([
     html.P(
@@ -31,7 +32,7 @@ app.layout = html.Div([
             dcc.Checklist(
                 id='stock-ticker-input',
                 options=[{'label': i, 'value': j} for i, j in tickers.items()],
-                values=[j for i, j in tickers.items()])
+                values=def_tickers)
         ], style={'width': '33%', 'display': 'inline-block'}),
 
         html.Div([
@@ -205,5 +206,5 @@ def initialize(stocks, network_type):
 
 
 if __name__ == '__main__':
-    cache_raw_data(tickers=[j for i, j in tickers.items()], network_type="Barabasi")
+    cache_raw_data(tickers=def_tickers, network_type="Barabasi")
     app.run_server(debug=True, port=3434)

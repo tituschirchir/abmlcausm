@@ -36,12 +36,11 @@ def download_balancesheet(tickers):
         bs = pd.read_csv(xf, index_col=0)
     else:
         assets, liab, equities = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+        morning_star = 'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'
         for tkr in tickers:
             assets2, liab2, equities2 = pd.DataFrame(columns=[tkr]), pd.DataFrame(columns=[tkr]), pd.DataFrame(
                 columns=[tkr])
-            download = requests.get(
-                'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'.format(
-                    tkr))
+            download = requests.get(morning_star.format(tkr))
             decoded_content = download.content.decode('utf-8')
             cr = csv.reader(decoded_content.splitlines(), delimiter=',')
             my_list = list(cr)[2:]

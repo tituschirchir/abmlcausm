@@ -3,15 +3,16 @@ import random
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 #from mesa.space import MultiGrid
-from mesa.datacollection import DataCollector
-import pandas as pd
+#from mesa.datacollection import DataCollector
 import numpy as np
+from order import *
 
 
 class MarketAgent(Agent):
     """ An agent with fixed initial wealth."""
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
+        self.order_count = 0
         self.wealth = 1000
         self.stock_preference = random.random() 
         #self.gamma = 0.5 #absloute risk averson
@@ -54,14 +55,20 @@ class MarketAgent(Agent):
 
     def order_trade(self, num_shares, trade_price):
         if num_shares > 0:
-            order_type = 1 #ask
+            side = 'sell'
         else:
-            order_type = 0 #bid
+            side = 'buy'
             num_shares = -num_shares
         price = trade_price
-        #print((max(self.model.orders.index)+1))
-        # make below a pd series
-        self.model.orders.loc[max(self.model.orders.index)+1] = [self.unique_id, order_type, num_shares, price]
+
+        order = Order(self.unique_id, self.order_count, side, 'market',\
+         num_shares, price, self.model.current_step)
+        self.model.order_book.add_order(order)
+
+        if self.order_count < 50:
+            self.order_count +=1
+        else:
+            self.order_count = 0
 
 
 
@@ -73,18 +80,15 @@ class MarketModel(Model):
         self.total_stock_shares = 1000 #total_stock_shares
         self.rf_rate = 0.01 #rf_rate
         self.current_step = 0
+        self.matched_trades = []
         self.VWAP = 10
         self.schedule = RandomActivation(self)
+        self.order_book = OrderBook()
 
-        d = {'agent_id': [], 'order_type': [], 'n_shares': [], 'price': []} #add time
-        self.orders = pd.DataFrame(data=d)
-        self.orders = self.orders[['agent_id', 'order_type', 'n_shares', 'price']]
-        self.orders.loc[0] = [-1, -1, -1, -1]
-
-        dd = {'step_id': [], 'price': [], 'volume': []} #add time
-        self.settled_trades = pd.DataFrame(data=dd)
-        self.settled_trades = self.settled_trades[['step_id', 'price', 'volume']]
-        self.settled_trades.loc[0] = [-1, 0, 0]
+        # dd = {'step_id': [], 'price': [], 'volume': []} #add time
+        # self.settled_trades = pd.DataFrame(data=dd)
+        # self.settled_trades = self.settled_trades[['step_id', 'price', 'volume']]
+        # self.settled_trades.loc[0] = [-1, 0, 0]
 
         # Create agents
         for i in range(self.num_agents):
@@ -100,87 +104,29 @@ class MarketModel(Model):
         '''Advance the model by one step.'''
         #self.datacollector.collect(self)
         self.schedule.step()
+        self.matched_trades = self.order_book.get_matched_trades()
         self.settle()   #self?
         self.VWAP = self.calculate_VWAP()
         self.current_step += 1 
 
-    def calculate_VWAP(self):
-        curr_step_trades = self.settled_trades[self.settled_trades.step_id == self.current_step]
-        if curr_step_trades.empty: return self.VWAP
-        return sum(np.multiply(curr_step_trades.volume, curr_step_trades.price))/sum(curr_step_trades.volume)
-
-
     def settle(self):
-        
-        bids = self.orders[self.orders['order_type'] == 0]
-        asks = self.orders[self.orders['order_type'] == 1]
-        if bids.empty or asks.empty: return
-        #rank asks by price first and then by number of shares
-        asks.sort_values(by='n_shares', ascending=False)
-        asks['price_rank'] = asks.rank(axis=0, method='first')['price']
+        for trade in self.matched_trades:
+            agent = self.schedule.agents[trade.agent_id]
+            agent.stock_shares += trade.quantity
+            agent.cash -= trade.quantity * trade.price
 
-        for i in range(1, int(max(asks['price_rank']))):
-            ask = asks[asks['price_rank'] == i]
-            ask_price = float(ask['price'])
-            ask_shares = float(ask['n_shares'])
-            #rank asks by price first and then by number of shares
-            bids.sort_values(by='n_shares', ascending=False)
-            bids['price_rank'] = bids.rank(axis=0, method='first')['price']
-           # bids.index = bids.price_rank
-
-            for j in range(1, int(max(bids['price_rank']))):
-                bid = bids[bids['price_rank'] == j]
-                bid_price = float(bid['price'])
-                bid_shares = float(bid['n_shares'])
-
-                if abs(ask_price - bid_price) < 0.03:
-                    agreed_price = (ask_price + bid_price)/2
-                    n_traded_shares = 0
-                    buyer = self.schedule.agents[int(bid['agent_id'])]
-                    seller = self.schedule.agents[int(ask['agent_id'])]
-
-                    if ask_shares > bid_shares:
-                        n_traded_shares = bid_shares
-                        buyer.stock_shares -= n_traded_shares
-                        buyer.cash += n_traded_shares * agreed_price
-                        seller.stock_shares += n_traded_shares
-                        seller.cash -= n_traded_shares * agreed_price
-
-                        self.orders.drop(self.orders.index[bid.index])
-                        ask['n_shares'] -= n_traded_shares
-
-                    if ask_shares < bid_shares:
-                        n_traded_shares = ask_shares
-                        buyer.stock_shares -= n_traded_shares
-                        buyer.cash += n_traded_shares * agreed_price
-                        seller.stock_shares += n_traded_shares
-                        seller.cash -= n_traded_shares * agreed_price
-
-                        self.orders.drop(self.orders.index[ask.index])
-                        bids.loc[bids.index[bids.price_rank == j]]['n_shares'] = \
-                        bid.n_shares.values[0] - n_traded_shares
-                        break
-
-                    if ask_shares == bid_shares:
-                        n_traded_shares = ask_shares
-                        buyer.stock_shares -= n_traded_shares
-                        buyer.cash += n_traded_shares * agreed_price
-                        seller.stock_shares += n_traded_shares
-                        seller.cash -= n_traded_shares * agreed_price
-
-                        self.orders.drop(self.orders.index[ask.index])
-                        self.orders.drop(self.orders.index[bid.index])
-                        break
-
-                    self.settled_trades.loc[max(self.settled_trades.index)+1] = \
-                    [self.current_step, agreed_price, n_traded_shares]
+    def calculate_VWAP(self):
+        if not self.matched_trades: return self.VWAP
+        trades = [x for x in self.matched_trades if x.quantity > 0]
+        return sum(np.multiply([x.quantity for x in trades], [x.price for x in trades]))\
+        /sum([x.quantity for x in trades])
 
 
 
-def compute_gini(model):
-	agent_wealths = [agent.wealth for agent in model.schedule.agents]
-	x = sorted(agent_wealths)
-	N = model.num_agents
-	B = sum(xi * (N-i) for i, xi in enumerate(x)) / (N * sum(x))
-	return (1 + (1/N) - 2*B)
+# def compute_gini(model):
+# 	agent_wealths = [agent.wealth for agent in model.schedule.agents]
+# 	x = sorted(agent_wealths)
+# 	N = model.num_agents
+# 	B = sum(xi * (N-i) for i, xi in enumerate(x)) / (N * sum(x))
+# 	return (1 + (1/N) - 2*B)
 

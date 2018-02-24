@@ -18,7 +18,7 @@ from network.financial_model import FinancialModel
 
 app = dash.Dash()
 app.title = "Agent-Based Modeling"
-def_tickers = [j for i, j in tickers.items()][0:5]
+def_tickers = ['JPM', 'GS', 'MS', 'BAC', 'C']
 interval_t = 1 * 500
 app.layout = html.Div([
     html.P(

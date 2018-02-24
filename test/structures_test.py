@@ -17,3 +17,7 @@ class TestBalanceSheetStructure(unittest.TestCase):
         self.assertListEqual([2341061, 286016, 1861063, 1502761, 1631996], [x.total_liabilities() for x in bs_sheets])
         self.assertListEqual([232065, 240170, 243471, 184394, 210534], [x.total_equity() for x in bs_sheets])
         self.assertListEqual([0] * 5, [x.identity() for x in bs_sheets])
+
+
+if __name__ == '__main__':
+    unittest.main()

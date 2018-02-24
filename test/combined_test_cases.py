@@ -14,18 +14,6 @@ def func1(x):
     return x ** 3 - x + 2
 
 
-class TestDataDownloader(unittest.TestCase):
-    def test_download_balance_sheet(self):
-        tickers = ["BAC", "GS", "MS", "PNC"]
-        bs = dd.download_balancesheet(tickers)
-        assets = bs[bs.Category == "A"][tickers]
-        liabilities = bs[bs.Category == "L"][tickers]
-        equity = bs[bs.Category == "E"][tickers]
-        # A = L + E
-        bs_condition = list(equity.sum().values + liabilities.sum().values - assets.sum().values)
-        self.assertListEqual([0.0, 0.0, 0.0, 0.0], bs_condition)
-
-
 class TestBlackScholes(unittest.TestCase):
     def test_call(self):
         option = EuropeanOption(Type=1, S=100, K=99, r=.0142, q=0.0, T=3, sigma=.25)

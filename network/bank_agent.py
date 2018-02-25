@@ -1,5 +1,6 @@
 from network.network_structure import Vertex
 from products.equities import Stock
+from structures.bank_structures import BalanceSheet
 
 alive = "Alive"
 dead = "Dead"
@@ -10,16 +11,9 @@ class Bank(Vertex):
     def __init__(self, unique_id, ticker, data, stock_data, model):
         super().__init__(unique_id, model)
         self.ticker = ticker
-        self.lt_assets = data.LT_A
-        self.cash_A = data.cash_A
-        self.accRec_A = data.AccRec_A
-        self.inventories_assets = data.Inventories_A
-        self.other_curr_assets = data.Other_curr_A
-        self.other_liab = data.Other_L
-        self.debt_liab = data.Debt_L
-        self.accPay_liab = data.AccPay_L
-        self.lt_liab = data.LT_L
-        self.equity = data.Equity
+        self.balance_sheet = BalanceSheet(data=data, company=ticker)
+        self.cash_A = self.balance_sheet.total_assets()
+        self.equity = self.balance_sheet.total_equity()
         self.state = alive
         self.shock_quantity = 0.0
         self.to_shock = False

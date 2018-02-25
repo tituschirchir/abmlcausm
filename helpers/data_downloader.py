@@ -30,7 +30,7 @@ def download_data(start, end, stocks_list, lag=1):
     return stats.ix[stocks_list], stocks[stocks_list]
 
 
-def download_balancesheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save=True):
+def download_balance_sheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save=True):
     i_loc = -prev_quarter
     assets, liab, equities = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     for tkr in tickers:
@@ -78,3 +78,13 @@ def download_balancesheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save=
     if save:
         bs.to_csv(f_loc)
     return bs
+
+
+def bs_load_all_and_filter(tickers, new=False, f_loc='/data/bs_ms.csv', save=True):
+    f_loc = md.MAIN_DIRECTORY + f_loc
+    if new or not os.path.isfile(f_loc):
+        bs = download_balance_sheet(list(md.tickers.values()), f_loc=f_loc, save=save)
+    else:
+        bs = pd.read_csv(f_loc, index_col=0)
+    tickers = list(set(bs.columns & tickers))
+    return bs[tickers + ['Category']], tickers

@@ -12,8 +12,9 @@ class Bank(Vertex):
         super().__init__(unique_id, model)
         self.ticker = ticker
         self.balance_sheet = BalanceSheet(data=data, company=ticker)
-        self.cash_A = self.balance_sheet.total_assets()
-        self.equity = self.balance_sheet.total_equity()
+        self.cash_A = self.balance_sheet.cash
+        self.equity = self.balance_sheet.equity
+        self.debtors = self.balance_sheet.debtors
         self.state = alive
         self.shock_quantity = 0.0
         self.to_shock = False

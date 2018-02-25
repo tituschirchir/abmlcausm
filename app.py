@@ -116,7 +116,7 @@ def update_graph_live(n):
     banks = model.schedule.agents
     banks = sorted(banks, key=lambda bank: bank.ticker, reverse=False)
     labels = [x.ticker for x in banks]
-    values = [x.cash_A for x in banks]
+    values = [x.equity for x in banks]
     layout = dict(xaxis=dict(title='Date'),
                   yaxis=dict(title='Cash in Hand'),
                   showlegend=False)
@@ -181,7 +181,6 @@ def initialize(stocks, network_type):
     colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], s_l * 20)))
     colors_c = np.asarray(colors_)[np.arange(0, s_l * 20, 20)]
     start = datetime.datetime(2016, 1, 1)
-    # data2 = ds.scrape_balance_sheet_data(qt=2, stock_list=stocks)
     data2, stocks = dd.bs_load_all_and_filter(tickers=stocks)
     stock_data = dd.download_data(start, end, stocks)
     model = FinancialModel(data2, stock_data, dt=dt, network_type=network_type)

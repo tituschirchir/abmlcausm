@@ -20,6 +20,7 @@ class Vertex(Agent):
     def solvent_neighbors_to(self):
         return [x for x in self.neighbors_to if x.state in ['Alive', 'Infected']]
 
+
 class Graph(Model):
     def __init__(self, network_type, n):
         super().__init__()
@@ -32,7 +33,7 @@ class Graph(Model):
 
     def initialize_adjacency_matrix(self):
         agents = self.schedule.agents
-        agents = sorted(agents, key=lambda bank: bank.equity, reverse=True)
+        agents = sorted(agents, key=(lambda bank: bank.equity), reverse=True)
         colnames = [x.ticker for x in agents]
         self.adjacency_matrix = pd.DataFrame(0, columns=colnames, index=colnames)
         for entity in agents:

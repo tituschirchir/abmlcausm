@@ -36,28 +36,28 @@ class FinancialModel(Graph):
             self.schedule.add(bank)
             unique_id += 1
         self.initialize_adjacency_matrix()
-        #self.add_derivatives()
+        # self.add_derivatives()
 
     def step(self):
         # Shock!
-        living = [x for x in self.schedule.agents if x.state in ["Alive", "Infected"]]
+        agents = self.schedule.agents
+        living = [x for x in agents if x.state in ["Alive", "Infected"]]
         if self.shock == 0.0 and living:
             unlucky_agent = random.choice(living)
             if random.random() > 0.95:
-                unlucky_agent.shock_quantity = 100000.0
+                unlucky_agent.shock_quantity = 100.0
                 unlucky_agent.state = 'Infected'
                 print("Unlucky agent is {}".format(unlucky_agent.ticker))
         self.prep_for_shock()
         self.schedule.step()
-        self.shock = sum([x.shock_quantity for x in self.schedule.agents])
-        self.dead = [x.ticker for x in self.schedule.agents if x.state == "Dead"]
+        self.shock = sum([x.shock_quantity for x in agents])
+        self.dead = [x.ticker for x in agents if x.state == "Dead"]
         self.date += datetime.timedelta(days=1)
-        df = pd.DataFrame(columns=[x.ticker for x in self.schedule.agents])
-        rvals = [x.liquidity() for x in self.schedule.agents]
-        df.loc[self.date] = rvals
+        df = pd.DataFrame(columns=[x.ticker for x in agents])
+        df.loc[self.date] = [x.liquidity() for x in agents]
         self.all_agents = self.all_agents.append(df)
         self.step_id += 1
-        for x in self.schedule.agents:
+        for x in agents:
             x.model = self
 
     def prep_for_shock(self):
@@ -67,7 +67,7 @@ class FinancialModel(Graph):
                 break
 
     def total_bad_debt(self):
-        return sum(v.bad_debt for v in self.schedule.agents)
+        return sum([v.bad_debt for v in self.schedule.agents])
 
     def add_derivatives(self):
         for x in self.schedule.agents:

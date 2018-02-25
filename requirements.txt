@@ -1,4 +1,3 @@
-bs4
 colorlover
 dash
 dash-renderer

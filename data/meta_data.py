@@ -38,4 +38,4 @@ network_layouts = {layouts[0]: layout.circular_layout,
                    layouts[6]: layout.spectral_layout,
                    layouts[7]: layout.fruchterman_reingold_layout}
 
-morning_star = 'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'
+morning_star = 'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=3&dataType=A&order=asc&columnYear=5&number=3'

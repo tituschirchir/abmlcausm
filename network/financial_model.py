@@ -36,7 +36,7 @@ class FinancialModel(Graph):
             self.schedule.add(bank)
             unique_id += 1
         self.initialize_adjacency_matrix()
-        self.add_derivatives()
+        #self.add_derivatives()
 
     def step(self):
         # Shock!
@@ -44,7 +44,7 @@ class FinancialModel(Graph):
         if self.shock == 0.0 and living:
             unlucky_agent = random.choice(living)
             if random.random() > 0.95:
-                unlucky_agent.shock_quantity = 100.0
+                unlucky_agent.shock_quantity = 100000.0
                 unlucky_agent.state = 'Infected'
                 print("Unlucky agent is {}".format(unlucky_agent.ticker))
         self.prep_for_shock()

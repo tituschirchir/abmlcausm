@@ -18,7 +18,7 @@ from network.financial_model import FinancialModel
 
 app = dash.Dash()
 app.title = "Agent-Based Modeling"
-def_tickers = [j for i, j in tickers.items()][1:4]
+def_tickers = [j for i, j in tickers.items()][0:5]
 interval_t = 1 * 500
 app.layout = html.Div([
     html.P(
@@ -29,20 +29,13 @@ app.layout = html.Div([
     dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0),
     html.Div([
         html.Div([
-            dcc.Checklist(
-                id='stock-ticker-input',
-                options=[{'label': i, 'value': j} for i, j in tickers.items()],
-                values=def_tickers)
-        ], style={'width': '33%', 'display': 'inline-block'}),
-
-        html.Div([
             dcc.Dropdown(
                 id='network-type-input',
                 options=[{'label': i, 'value': i} for i in network_types],
                 value='Barabasi',
                 multi=False
             )
-        ], style={'width': '33%', 'display': 'inline-block'}),
+        ], style={'width': '49%', 'display': 'inline-block'}),
 
         html.Div([
             dcc.RadioItems(
@@ -51,7 +44,7 @@ app.layout = html.Div([
                 value=kawai,
                 labelStyle={'display': 'inline-block'}
             )
-        ], style={'width': '33%', 'float': 'right', 'display': 'inline-block'})
+        ], style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
     ], style={
         'borderBottom': 'thin lightgrey solid',
         'backgroundColor': 'rgb(250, 250, 250)',
@@ -68,13 +61,21 @@ app.layout = html.Div([
             dcc.Graph(id='live-update-graph-scatter')
         ], style={'width': '50%', 'display': 'inline-block'})
     ]),
-    html.Hr()
+    html.Hr(),
+    html.Div([
+        dcc.Dropdown(
+            id='stock-ticker-input',
+            options=[{'label': i, 'value': j} for i, j in tickers.items()],
+            value=def_tickers,
+            multi=True
+        )
+    ], style={'display': 'inline-block'})
 ])
 
 
 # Cache raw data
 @app.callback(Output('raw_container', 'hidden'),
-              [Input('stock-ticker-input', 'values'),
+              [Input('stock-ticker-input', 'value'),
                Input('network-type-input', 'value')])
 def cache_raw_data(tickers, network_type):
     global model, data2, end, colors_c, stocks, initiated

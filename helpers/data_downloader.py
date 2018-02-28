@@ -11,10 +11,9 @@ import data.meta_data as md
 
 def download_data(start, end, stocks_list, lag=1):
     # We will look at stock prices over the past year, starting at January 1, 2016
-    xf = "data/stocks.csv"
+    xf = "data/stats.csv"
     if os.path.isfile(xf):
-        stocks = pd.read_csv(xf, index_col=0)
-        stats = pd.read_csv("data/stats.csv", index_col=0)
+        stats = pd.read_csv(xf, index_col=0)
     else:
         all_stocks = [v for k, v in md.tickers.items()]
         apple = web.DataReader(all_stocks, "google", start, end)
@@ -25,9 +24,8 @@ def download_data(start, end, stocks_list, lag=1):
         stats['annual_ret'] = stats['mean'] * 252 / lag
         stats['annual_std'] = stats['std'] * math.sqrt(252 / lag)
         stats['current_price'] = stocks[-1:].T.values
-        stats.to_csv("data/stats.csv")
-        stocks.to_csv(xf)
-    return stats.ix[stocks_list], stocks[stocks_list]
+        stats.to_csv(xf)
+    return stats.ix[stocks_list]
 
 
 def download_balance_sheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save=True):

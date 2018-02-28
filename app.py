@@ -183,7 +183,7 @@ def initialize(stocks, network_type):
     start = datetime.datetime(2016, 1, 1)
     data2, stocks = dd.bs_load_all_and_filter(tickers=stocks)
     stock_data = dd.download_data(start, end, stocks)
-    model = FinancialModel(data2, stock_data, dt=dt, network_type=network_type)
+    model = FinancialModel(data2, stock_data, network_type=network_type)
     return model, data2, end, colors_c, stocks
 
 

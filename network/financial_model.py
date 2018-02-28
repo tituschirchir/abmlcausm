@@ -11,11 +11,9 @@ from products.positions import Position
 
 
 class FinancialModel(Graph):
-    def __init__(self, data, stock_data, dt, network_type):
+    def __init__(self, data, stock_data, network_type):
         super().__init__(network_type, n=data.shape[1] - 1)
         self.running = True
-        self.dt = dt
-        self.step_id = 0
         self.shock = 0.0
         self.to_shock = True
         self.bailed_out = []
@@ -32,7 +30,7 @@ class FinancialModel(Graph):
         for st in data.columns:
             if st == 'Category':
                 break
-            bank = Bank(unique_id, st, data[[st, 'Category']], stock_data[0].ix[st], model=self)
+            bank = Bank(unique_id, st, data[[st, 'Category']], stock_data.ix[st], model=self)
             self.schedule.add(bank)
             unique_id += 1
         self.initialize_adjacency_matrix()
@@ -56,7 +54,6 @@ class FinancialModel(Graph):
         df = pd.DataFrame(columns=[x.ticker for x in agents])
         df.loc[self.date] = [x.liquidity() for x in agents]
         self.all_agents = self.all_agents.append(df)
-        self.step_id += 1
         for x in agents:
             x.model = self
 

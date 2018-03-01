@@ -1,25 +1,45 @@
 import random
 
 import numpy as np
+import pandas as pd
+
+from network.components import Model
+from network.scheduler import StagedActivation
+from simulations.sim_bank import Edge, Node
 
 
 def n_rands(N):
     return np.asarray([random.random() for x in range(0, N)])
 
 
-class NetworkItem:
+class Network(Model):
     def __init__(self, id, N, bs_total, steepness):
+        super().__init__()
+        self.running = True
+        self.schedule = StagedActivation(self, stage_list=["equity_change", 'spread_shock'])
         self.id = id
         self.N = N
         self.nodes = []
         self.initialize(steepness, bs_total, self.N)
+        for nd in self.nodes:
+            self.schedule.add(nd)
+
+    def step(self):
+        agents = self.schedule.agents
+        if random.random() > .9:
+            shock = 250
+            chosen = random.choice(agents)
+            print("Random infection: {}".format(chosen._id))
+            chosen.shock += shock
+            chosen.cash -= chosen.shock
+        self.schedule.step()
 
     def initialize(self, steepness, bs_total, N):
         dist = sum([1 / (steepness ** x) for x in range(0, N)])
         bs = np.asarray([bs_total / dist / steepness ** x for x in range(0, N)])
         lev = n_rands(N) * 10 + 1
         ret = np.multiply(n_rands(N), np.asarray([(.5 if random.random() > 0.2 else -.25) for x in range(0, N)]))
-        vol = [(abs(bs_total * ret[x] * np.sqrt(lev[x])) / (random.random() * bs[x] * 100)) for x in range(0, N)]
+        vol = [np.sqrt(abs(bs[x] * ret[x]) / (random.random() * bs_total)) for x in range(0, N)]
         equities = np.divide(bs, lev)
         liabilities = bs - equities
         deposits = np.divide(liabilities, n_rands(N) * 7 + 1)
@@ -35,7 +55,7 @@ class NetworkItem:
         lt_assets = bs - st_assets - cash_and_equivalents
 
         self.nodes = [Node(x, ret[x], vol[x], cash_and_equivalents[x], st_assets[x], lt_assets[x],
-                           st_liabilities[x], lt_liabilities[x], deposits[x], equities[x]) for x in range(0, N)]
+                           st_liabilities[x], lt_liabilities[x], deposits[x], equities[x], self) for x in range(0, N)]
         self.initialize_edges()
 
     def initialize_edges(self):
@@ -55,35 +75,9 @@ class NetworkItem:
                     nd.add_edge(edge)
             i += 1
 
-
-class Node:
-    def __init__(self, id, mu, sigma, cash, st_assets, lt_assets, st_liabilities, lt_liabilities, deposits, equities):
-        self._id = id
-        self.mu = mu
-        self.sigma = sigma
-        self.cash = cash
-        self.st_assets = st_assets
-        self.lt_assets = lt_assets
-        self.deposits = deposits
-        self.lt_liabilities = lt_liabilities
-        self.st_liabilities = st_liabilities
-        self.equities = equities
-        self.bank_borrow, self.bank_lend = 0.0, 0.0
-        self.edges_to = []
-
-    def add_edge(self, edge):
-        self.edges_to.append(edge)
-        self.bank_borrow += edge.value
-        self.st_liabilities -= edge.value
-        edge.node_to.bank_lend += edge.value
-        edge.node_to.st_assets -= edge.value
-
-
-class Edge:
-    def __init__(self, to, value):
-        self._id = to._id
-        self.node_to = to
-        self.value = value
-
-    def __str__(self):
-        return "{}=>{}".format(self._id, self.value)
+    def get_loan_matrix(self):
+        loan_matrix = pd.DataFrame(data=0.0, index=range(0, self.N), columns=range(0, self.N))
+        for nd in self.nodes:
+            for edge in nd.edges_to:
+                loan_matrix.loc[nd._id, edge.node_to._id] = edge.value
+        return loan_matrix

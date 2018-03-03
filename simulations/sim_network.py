@@ -27,7 +27,7 @@ class Network(Model):
     def step(self):
         agents = self.schedule.agents
         if random.random() > .9:
-            shock = 250
+            shock = 2500
             chosen = random.choice(agents)
             chosen.shock += shock
             chosen.cash -= chosen.shock

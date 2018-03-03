@@ -45,15 +45,12 @@ class Node(Agent):
         if self.is_alive and self.shock > 0.0:
             res = self.equities - self.shock
             if res < 0.0:
-                print(" {} dies and spreads".format(self._id))
                 self.equities = 0.0
                 self.is_alive = False
                 for x in self.edges_to:
-                    print("   cascade infection: {} by {}".format(x._id, self._id))
                     x.node_to.bank_lend -= x.value
                     x.node_to.shock = x.value
             else:
-                print(" {} absorbs!".format(self._id))
                 self.equities = res
             self.shock = 0.0
             self.stock.S = self.equities / self.stock_issue

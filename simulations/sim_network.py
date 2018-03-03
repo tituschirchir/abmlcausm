@@ -29,7 +29,6 @@ class Network(Model):
         if random.random() > .9:
             shock = 250
             chosen = random.choice(agents)
-            print("Random infection: {}".format(chosen._id))
             chosen.shock += shock
             chosen.cash -= chosen.shock
         self.schedule.step()

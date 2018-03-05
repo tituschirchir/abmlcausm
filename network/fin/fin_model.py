@@ -9,7 +9,7 @@ class FinNetwork(Graph):
 
     def apply_shock(self, pos):
         unlucky = [x for x in self.schedule.agents if x.unique_id == pos][0]
-        shock = 100000
+        shock = 1000
         unlucky.apply_initial_shock(shock)
 
     def step(self):

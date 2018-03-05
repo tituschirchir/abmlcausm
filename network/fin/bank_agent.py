@@ -28,6 +28,8 @@ class Bank(Node):
         self.deal_with_shock(tremor=False)
 
     def deal_with_shock(self, tremor=True):
+        if self.shock == 0:
+            return
         if tremor:
             if self.interbankAssets < self.shock:
                 self.interbankAssets = 0.0
@@ -36,6 +38,7 @@ class Bank(Node):
                 self.interbankAssets -= self.shock
         if self.capital >= self.shock:
             self.capital -= self.shock
+            self.affected = True
         else:
             residual = self.shock - self.capital
             self.capital = 0.0

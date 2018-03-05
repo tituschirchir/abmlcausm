@@ -4,3 +4,5 @@
 /data/balance_sheet.csv
 .idea/*
 /data/bs_ms.csv
+network/core/__pycache__/
+network/fin/__pycache__/

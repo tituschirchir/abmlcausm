@@ -34,7 +34,6 @@ class Graph(Model):
     def __init__(self, name, init_agents, net_type, p):
         super().__init__()
         self.schedule = self.get_scheduler()
-
         random.shuffle(init_agents)
         self.init_agents = init_agents
         self.schedule.agents = []
@@ -54,13 +53,13 @@ class Graph(Model):
                 i.add_edge(j, 1 if random.random() > 0.5 else 0)
 
     def power_law_graph(self):
-        self.init_agents = sorted(self.init_agents, key=lambda x: x.interbankAssets)
+        self.init_agents = sorted(self.init_agents, key=lambda x: x.capital)
         for agt in self.init_agents:
             node = self.new_node(agt.unique_id)
             if self.schedule.agents:
                 subset = random_subset(self.schedule.agents, p=self.p, exc=None)
                 for j in subset:
-                    node.add_edge(j, 1 if random.random() > 0.5 else 0)
+                    node.add_edge(j, 1)
             self.schedule.add(node)
 
     def _adj_mat(self):

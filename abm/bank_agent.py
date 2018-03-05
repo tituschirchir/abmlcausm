@@ -1,4 +1,3 @@
-from network.core.skeleton import Vertex
 from products.equities import Stock
 from structures.bank_structures import BalanceSheet
 

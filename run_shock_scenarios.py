@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
+import time
+import multiprocessing as mp
 import network.core.skeleton as ns
-from network.fin.struct import Bank, FinNetwork
+from network.fin.fin_model import FinNetwork
+from network.fin.bank_agent import Bank
 
 inter_bank_assets = ['Cash and due from banks',
                      'Debt securities',
@@ -57,30 +59,40 @@ def get_agents(n):
     return agents
 
 
-def per_bank(count, pos, n, p=.0):
-    networks = [FinNetwork("Net {}".format(y), get_agents(n), net_type=ns.power_law_graph, p=p) for y in range(count)]
-    deads = []
-    for net in networks:
-        net.apply_shock(pos)
-        for i in range(10):
-            net.step()
-        deads.append(sum([1 for x in net.schedule.agents if x.defaults]))
-    return sum(deads) / count
+def per_probability(count, n, pos, arange):
+    all_deads = []
+    for k in arange:
+        networks = [FinNetwork("Net {}".format(y), get_agents(n), net_type=ns.power_law_graph, p=k) for y in
+                    range(count)]
+        deads = []
+        for net in networks:
+            net.apply_shock(pos)
+            for i in range(10):
+                net.step()
+            deads.append(sum([1 for x in net.schedule.agents if x.defaults]))
+        all_deads.append(sum(deads) / count)
+    return pos, all_deads
 
 
-def per_probability(count, pos, n, p):
-    networks = [FinNetwork("Net {}".format(y), get_agents(n), net_type=ns.power_law_graph, p=p) for y in range(count)]
-    deads = []
-    for net in networks:
-        net.apply_shock(pos)
-        for i in range(10):
-            net.step()
-        deads.append(sum([1 for x in net.schedule.agents if x.defaults]))
-    return sum(deads) / count
+result_list = {}
 
 
-# killed = [per_bank(10, x, n=29) for x in range(29)]
-for i in range(29):
-    killed = [per_probability(10, i, n=29, p=x) for x in np.arange(0.0, 1.0, 0.05)]
-    plt.plot(np.arange(0.0, 1.0, 0.05), killed)
-plt.show()
+def log_result(result):
+    k, v = result
+    result_list[k] = v
+
+
+if __name__ == '__main__':
+    t_start = time.time()
+    pool = mp.Pool(processes=30)
+    arange = np.arange(0.0, 1.0, 0.025)
+    for x in range(29):
+        pool.apply_async(per_probability, args=(10, 29, x, arange,), callback=log_result)
+    killed = sorted(result_list, key=lambda x: x.keys())
+    pool.close()
+    pool.join()
+    for k, v in result_list.items():
+        plt.plot(arange, v)
+
+    print("T1:{}".format(time.time() - t_start))
+    plt.show()

@@ -11,7 +11,7 @@ class MarketAgent(Agent):
         self.order_count = 0
         self.wealth = 1000
         self.stock_preference = random.random()
-        self.stock_shares = 50 
+        self.stock_shares = 50
         self.stock_weight = (self.stock_shares * self.model.stock.price) / self.wealth
         self.cash = self.wealth - self.stock_shares * self.model.stock.price
 
@@ -64,7 +64,7 @@ class MarketModel(Model):
         self.current_step = 0
         self.matched_trades = []
         self.stock = Stock(ticker="STK", model=self, initial_price=10, outstading_shares=1000,
-            equil_dividend=0.2, divident_vol=0.2)
+                           equil_dividend=0.2, divident_vol=0.2)
         self.schedule = RandomActivation(self)
         self.order_book = OrderBook()
         for i in range(self.num_agents):
@@ -77,7 +77,6 @@ class MarketModel(Model):
         self.settle()
         self.current_step += 1
         self.stock.update_price(self.current_step, self.calculate_VWAP())
-
 
     def settle(self):
         for trade in self.matched_trades:

@@ -7,13 +7,15 @@ import multiprocessing as mp
 
 
 def run_net(j):
-    networks = [Network(25, 0.3, 10000, 0.3, j) for k in range(100)]
+    networks = [Network(25, 0.3, 10000, 0.3, j) for k in range(10)]
     for nt in networks:
         nt.shock_network(1000)
     return np.mean([x.dead for x in networks])
 
 
 result_list = []
+
+
 def log_result(result):
     result_list.append(result)
 
@@ -22,12 +24,12 @@ if __name__ == '__main__':
     deaths = []
     t_start = time.time()
     probs = np.arange(0.0, 0.20, 0.005)
-    pool = mp.Pool(processes=36)
+    pool = mp.Pool(processes=4)
     for i in probs:
         pool.apply_async(run_net, args=(i,), callback=log_result)
     pool.close()
     pool.join()
-    print("T1:{}".format(time.time()-t_start))
+    print("T1:{}".format(time.time() - t_start))
     deaths = result_list
     plt.plot(probs, deaths)
     s = np.pi * (15 * np.random.rand(len(probs))) ** 2

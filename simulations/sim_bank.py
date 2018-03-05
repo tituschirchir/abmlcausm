@@ -1,4 +1,4 @@
-from network.components import Agent
+from network.core.components import Agent
 from products.equities import Stock
 
 

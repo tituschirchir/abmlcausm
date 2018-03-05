@@ -12,6 +12,10 @@ class BaseScheduler:
     def add(self, agent):
         self.agents.append(agent)
 
+    def add_all(self, agents):
+        for x in agents:
+            self.add(x)
+
     def remove(self, agent):
         while agent in self.agents:
             self.agents.remove(agent)

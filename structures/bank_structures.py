@@ -36,11 +36,6 @@ class BalanceSheet:
     def aggregate(self, check, attr='name'):
         return sum([x.value for x in self.line_items if getattr(x, attr) in check])
 
-    def __str__(self):
-        return "A:{}\n  L:{}\n  E:{}\n------- \n A+E:{}".format(self.total_assets, self.total_liabilities,
-                                                             self.total_equity,
-                                                             self.total_liabilities + self.total_equity)
-
 
 class LineItem:
     def __init__(self, name, category, value):

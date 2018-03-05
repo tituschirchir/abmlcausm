@@ -4,17 +4,16 @@ import colorlover as cl
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import networkx as nx
 import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from plotly.graph_objs import *
 
 import helpers.data_downloader as dd
+from abm.financial_model import FinancialModel
 from data.meta_data import network_layouts, layouts, kawai, network_types
 from data.meta_data import tickers
 from network import bank_agent as ba
-from network.financial_model import FinancialModel
 
 app = dash.Dash()
 app.title = "Agent-Based Modeling"

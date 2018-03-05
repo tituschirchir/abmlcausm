@@ -3,8 +3,8 @@ import random
 import numpy as np
 import pandas as pd
 
-from network.components import Model
-from network.scheduler import StagedActivation
+from network.core.components import Model
+from network.core.scheduler import StagedActivation
 from simulations.sim_bank import Edge, Node
 
 

@@ -86,3 +86,40 @@ def bs_load_all_and_filter(tickers, new=False, f_loc='/data/bs_ms.csv', save=Tru
         bs = pd.read_csv(f_loc, index_col=0)
     tickers = list(set(bs.columns & tickers))
     return bs[tickers + ['Category']], tickers
+
+
+def get_balance_sheet_as_data_frames():
+    inter_bank_assets = ['Cash and due from banks',
+                         'Debt securities',
+                         'Deposits with banks',
+                         'Derivative assets',
+                         'Equity securities',
+                         'Federal funds sold',
+                         'Fixed maturity securities',
+                         'Investments',
+                         'Loans',
+                         'Loans, total',
+                         'Receivables',
+                         'Securities and investments',
+                         'Short-term investments',
+                         'Trading assets',
+                         'Trading securities']
+    inter_bank_liabilities = ['Derivative liabilities',
+                              'Federal funds purchased',
+                              'Long-term debt',
+                              'Minority Interest',
+                              'Payables',
+                              'Payables and accrued expenses',
+                              'Short-term borrowing',
+                              'Short-term debt',
+                              'Trading liabilities',
+                              'Unearned premiums']
+    data = pd.read_csv('data/bs_ms.csv', index_col=0)
+    _equities = data[data.Category == 'E']
+    liabilities = data[data.Category == 'L']
+    assets = data[data.Category == 'A']
+    _inter_bank_liabilities = liabilities.loc[inter_bank_liabilities]
+    _customer_deposits = liabilities.drop(inter_bank_liabilities)
+    _inter_bank_assets = assets.loc[inter_bank_assets]
+    _external_assets = assets.drop(inter_bank_assets)
+    return _inter_bank_assets, _inter_bank_liabilities, _customer_deposits, _external_assets, _equities

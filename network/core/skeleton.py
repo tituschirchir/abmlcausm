@@ -1,6 +1,5 @@
 import random
 
-import networkx as nx
 import pandas as pd
 
 from network.core.components import Agent, Model
@@ -34,7 +33,7 @@ class Node(Agent):
 
 
 class Graph(Model):
-    def __init__(self, name, init_agents, net_type, p):
+    def __init__(self, name, init_agents, net_type, p=.5, k=3, m=2):
         super().__init__()
         self.schedule = self.get_scheduler()
         self.init_agents = init_agents
@@ -42,25 +41,32 @@ class Graph(Model):
         self.name = name
         self.N = len(init_agents)
         self.p = p
+        self.k = k
+        self.m = m
         self.initialize_graph(getattr(self, net_type)())
 
     def new_node(self, unique_id):
         pass
 
     def erdos_renyi_graph(self):
+        import networkx as nx
         return nx.fast_gnp_random_graph(n=self.N, p=self.p)._adj
 
     def barabasi_albert_graph(self):
-        return nx.barabasi_albert_graph(n=self.N, m=2)._adj
+        import networkx as nx
+        return nx.barabasi_albert_graph(n=self.N, m=self.m)._adj
 
     def power_law_cluster_graph(self):
-        return nx.powerlaw_cluster_graph(n=self.N, m=2, p=self.p)._adj
+        import networkx as nx
+        return nx.powerlaw_cluster_graph(n=self.N, m=self.m, p=self.p)._adj
 
     def watts_strogatz_graph(self):
-        return nx.watts_strogatz_graph(n=self.N, k=3, p=self.p)._adj
+        import networkx as nx
+        return nx.watts_strogatz_graph(n=self.N, k=self.k, p=self.p)._adj
 
     def newman_watts_strogatz_graph(self):
-        return nx.newman_watts_strogatz_graph(n=self.N, k=3, p=self.p)._adj
+        import networkx as nx
+        return nx.newman_watts_strogatz_graph(n=self.N, k=self.k, p=self.p)._adj
 
     def agent_by_id(self, id):
         return [x for x in self.schedule.agents if x.unique_id == id][0]

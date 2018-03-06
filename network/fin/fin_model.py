@@ -3,8 +3,8 @@ from network.core.skeleton import Graph
 
 
 class FinNetwork(Graph):
-    def __init__(self, name, init_agents, net_type, p):
-        super().__init__(name, init_agents, net_type, p)
+    def __init__(self, name, init_agents, net_type, p, k, m):
+        super().__init__(name, init_agents, net_type, p, k, m)
         self.disburse_exposure()
 
     def apply_shock(self, pos):

@@ -1,3 +1,4 @@
+networkx
 colorlover
 dash
 dash-renderer

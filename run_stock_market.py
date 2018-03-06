@@ -1,19 +1,10 @@
-from abm_market.model import MarketModel
-import matplotlib.pyplot as mpl
+import network.core.skeleton as ns
+from helpers.agent_fisher import get_agents
+from network.fin.fin_model import FinNetwork
 
-model = MarketModel(1000)
-for i in range(200):
-    model.step()
-    # if not i % 10:
-    # 	#print(model.stock.price)
-    # 	print(model.stock.price_MA_5)
+fin_network = FinNetwork("Net 1", get_agents(10), net_type=ns.power_law_graph, p=.4)
 
-vs = [v for k, v in model.stock.price_hist.items()]
-ks = [k for k, v in model.stock.price_hist.items()]
-_10s = [m for k, m in model.stock.price_MA_10_hist.items()]
-_50s = [m for k, m in model.stock.price_MA_50_hist.items()]
+for nd in fin_network.schedule.agents:
+    print("{} (${})-{}".format(nd.unique_id, nd.interbankAssets, [x.node_to.unique_id for x in nd.edges]))
 
-mpl.plot(ks, vs)
-mpl.plot(ks, _10s)
-mpl.plot(ks, _50s)
-mpl.show()
+print(fin_network._adj_mat())

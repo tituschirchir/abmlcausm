@@ -1,4 +1,5 @@
 import pandas as pd
+
 from network.fin.bank_agent import Bank
 
 inter_bank_assets = ['Cash and due from banks',
@@ -44,6 +45,8 @@ def get_agents(n):
     data, equities, _inter_bank_liabilities, _customer_deposits, _inter_bank_assets, _external_assets = load_bs_data()
     i = 0
     agents = []
+    if n > data.shape[1] - 1:
+        n = data.shape[1] - 1
     for tkr in data.columns[0:n]:
         if tkr != 'Category':
             bnk = Bank(tkr, i, None)

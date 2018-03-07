@@ -1,0 +1,29 @@
+.side-bar {
+    height: 100%;
+    width: 18%;
+    position: fixed;
+    z-index: 1;
+    left: inherit;
+    background-color: rgb(221, 241, 133);
+    overflow-x: initial;
+    padding-top: 1%;
+    padding-left: 1%;
+}
+
+.main {
+    margin-left: 18%; /* Same as the width of the sidebar */
+    padding: 0px 10px;
+    padding-top: 1%;
+}
+
+._dash-undo-redo {
+    display: none;
+}
+
+.modebar {
+    display: none !important;
+}
+
+.plot-container .plotly {
+    background-color: yellow;
+}

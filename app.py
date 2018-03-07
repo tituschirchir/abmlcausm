@@ -15,53 +15,50 @@ import network.core.skeleton as ns
 from helpers.agent_fisher import get_agents
 from network.fin.fin_model import FinNetwork
 
+margin = dict(b=40, l=40, r=0, t=10)
 layouts = ['fruchterman_reingold_layout', 'kamada_kawai_layout', 'circular_layout', 'spring_layout']
-app = dash.Dash()
+app = dash.Dash(__name__, static_folder='assets')
+app.scripts.config.serve_locally = True
+app.css.config.serve_locally = True
 app.title = "Agent-Based Modeling"
 interval_t = 1 * 1000
-app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
+# dcc._css_dist[0]['relative_package_path'].append('codePen.css')
+
 app.layout = html.Div([
-    html.Div([html.H1("An Agent Based Model Framework")], style={'background-color': 'rgb(221, 241, 133)'}),
-    html.P(
-        hidden='',
-        id='raw_container',
-        style={'display': 'none'}
-    ),
+    html.Link(href='/assets/codePen.css', rel='stylesheet'),
+    html.Link(href='/assets/app.css', rel='stylesheet'),
+    html.P(hidden='', id='raw_container', style={'display': 'none'}),
     dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0),
     html.Div([
-        html.Div([
-            html.Label(html.Strong('No. of Banks')),
-            dcc.Input(id="nofbanks", value='29', type='number', step=1, min=0, max=29),
-            html.Label(html.Strong('Probability')),
-            dcc.Input(id="prob", value='0.5', type='number', step=0.05, min=0, max=1)],
-            className="two columns"),
-        html.Div([
-            html.Label(html.Strong('M')), dcc.Input(id="m_val", value='3', type='number', step=1, min=0, max=29),
-            html.Label(html.Strong('K')), dcc.Input(id="k_val", value='4', type='number', step=1, min=2, max=28)],
-            className="two columns"),
-        html.Div([
-            html.Label(html.Strong('Network')),
-            dcc.RadioItems(
-                id='network-type-input',
-                options=[{'label': i, 'value': i} for i in ns.all_nets],
-                value=ns.barabasi_albert_graph
-            )
-        ], className='four columns'),
-        html.Div([
-            html.Label(html.Strong('Layout')),
-            dcc.RadioItems(
-                id='network-layout-input',
-                options=[{'label': k, 'value': k} for k in layouts],
-                value="kamada_kawai_layout"
-            )
-        ], className='three columns')
-    ], className='row'),
-    html.Hr(),
+        html.H2("A.B.M."),
+        html.Label(html.Strong('No. of Banks')),
+        dcc.Input(id="nofbanks", value=29, type='number', step=1, min=1, max=29),
+        html.Label(html.Strong('Probability')),
+        dcc.Input(id="prob", value=0.5, type='number', step=0.05, min=0, max=1),
+        html.Label(html.Strong('M')), dcc.Input(id="m_val", value=3, type='number', step=1, min=0, max=29),
+        html.Label(html.Strong('K')), dcc.Input(id="k_val", value=4, type='number', step=1, min=0, max=28),
+        html.Label(html.Strong('Network')),
+        dcc.RadioItems(
+            id='network-type-input',
+            options=[{'label': i, 'value': i} for i in ns.all_nets],
+            value=ns.barabasi_albert_graph
+        ),
+        html.Label(html.Strong('Layout')),
+        dcc.RadioItems(
+            id='network-layout-input',
+            options=[{'label': k, 'value': k} for k in layouts],
+            value="kamada_kawai_layout"
+        )
+    ], className="side-bar"),
     html.Div([
-        html.Div([dcc.Graph(id='live-update-graph-network')], className="four columns"),
-        html.Div([dcc.Graph(id='funnel-graph')], className="eight columns")
-    ], className='col')
+        html.Div([dcc.Graph(id='live-update-graph-network')], className="six columns"),
+        html.Div([dcc.Graph(id='show-bank-status')], className="six columns"),
+        html.Div([dcc.Graph(id='funnel-graph')], className="six columns")
+    ], className="main")
 ])
+
+
+# app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
 
 
 def build_graph(model_):
@@ -78,10 +75,12 @@ def build_graph(model_):
 @app.callback(Output('raw_container', 'hidden'),
               [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
                Input('m_val', 'value'), Input('k_val', 'value')])
-def cache_raw_data(net_type, N=-1, p=0.5, m=2, k=3):
+def cache_raw_data(net_type, N=29, p=0.5, m=3, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
+    if m >= N:
+        N = m + 1
     agents = get_agents(int(N))
-    model = FinNetwork("Net 1", agents, net_type=net_type, p=float(p), m=int(m), k=int(k))
+    model = FinNetwork("Net 1", agents, net_type=net_type, p=p, m=m, k=k)
     stocks = [x.name for x in agents]
     colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], len(stocks) * 20)))
     colors_c = np.asarray(colors_)[np.arange(0, len(stocks) * 20, 20)]
@@ -90,9 +89,10 @@ def cache_raw_data(net_type, N=-1, p=0.5, m=2, k=3):
     return 'loaded'
 
 
-@app.callback(Output('live-update-graph-network', 'figure'),
-              [Input('interval-component', 'n_intervals'),
-               Input('network-layout-input', 'value')])
+interval_element = Input('interval-component', 'n_intervals')
+
+
+@app.callback(Output('live-update-graph-network', 'figure'), [interval_element, Input('network-layout-input', 'value')])
 def update_graph_live(n, net_layout):
     if random.random() > 0.9 and sum([x.shock for x in agents]) == 0.0:
         model.apply_shock(random.randint(0, len(agents)))
@@ -123,20 +123,18 @@ def update_graph_live(n, net_layout):
             x1, y1 = pos[nei]
             edge_trace['x'] += [x0, x1, None]
             edge_trace['y'] += [y0, y1, None]
-
     return Figure(data=Data([edge_trace, node_trace]),
                   layout=Layout(
                       titlefont=dict(size=16),
                       showlegend=False,
                       hovermode='closest',
-                      margin=dict(b=20, l=5, r=5, t=40),
+                      margin=margin,
+                      height=600,
                       xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
                       yaxis=YAxis(showgrid=False, zeroline=False, showticklabels=False)))
 
 
-@app.callback(
-    dash.dependencies.Output('funnel-graph', 'figure'),
-    [Input('interval-component', 'n_intervals')])
+@app.callback(Output('funnel-graph', 'figure'), [interval_element])
 def update_graph(n):
     x = [x.name for x in agents]
     trace1 = go.Bar(x=x, y=[x.interbankAssets * 1000000 for x in agents], name='Loan Assets')
@@ -147,8 +145,27 @@ def update_graph(n):
 
     return {
         'data': [trace1, trace2, trace3, trace4, trace5],
-        'layout': go.Layout(barmode='stack')
+        'layout': go.Layout(barmode='stack', height=300, margin=margin)
     }
+
+
+@app.callback(Output('show-bank-status', 'figure'), [interval_element])
+def update_graph_live(i):
+    history = model.life_history
+    graphs = []
+    graphs.append(go.Scatter(
+        x=np.arange(0, len(history)),
+        y=history,
+        mode='dots',
+        marker=dict(
+            color='red',
+            line=dict(
+                width=2,
+                color='green'
+            ))
+    ))
+    layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Banks Alive'), margin=margin, height=300)
+    return dict(data=graphs, layout=layout)
 
 
 if __name__ == '__main__':

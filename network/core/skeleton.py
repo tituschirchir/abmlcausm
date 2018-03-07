@@ -27,26 +27,32 @@ class Node(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.edges = []
+        self.in_degree = []
 
     def add_edge(self, other):
-        self.edges.append(Edge(self, other, 0, 0.0))
+        edge = Edge(self, other, 0, 0.0)
+        self.edges.append(edge)
+        other.in_degree.append(edge)
+
+    def remove_edge(self, to):
+        self.edges = [edge for edge in self.edges if edge.node_to != to]
+        self.in_degree = [edge for edge in self.in_degree if edge.node_to != to]
+
+    def edge_exists(self, node_to):
+        for x in self.edges:
+            if x.node_to == node_to: return x
+        return self.add_edge(node_to)
 
 
 class Graph(Model):
     def __init__(self, name, init_agents, net_type, p=.5, k=3, m=2):
         super().__init__()
         self.schedule = self.get_scheduler()
-        self.init_agents = init_agents
-        self.schedule.agents = []
+        self.schedule.agents = [agent for agent in init_agents]
+        self.initialize_model()
         self.name = name
-        self.N = len(init_agents)
-        self.p = p
-        self.k = k
-        self.m = m
+        self.N, self.p, self.k, self.m = len(init_agents), p, k, m
         self.initialize_graph(getattr(self, net_type)())
-
-    def new_node(self, unique_id):
-        pass
 
     def erdos_renyi_graph(self):
         import networkx as nx
@@ -68,16 +74,15 @@ class Graph(Model):
         import networkx as nx
         return nx.newman_watts_strogatz_graph(n=self.N, k=self.k, p=self.p)._adj
 
-    def agent_by_id(self, id):
+    def get_agent(self, id):
         return [x for x in self.schedule.agents if x.unique_id == id][0]
 
     def initialize_graph(self, adj):
-        self.schedule.add_all([self.new_node(agent.unique_id) for agent in self.init_agents])
-        self.schedule.agents = sorted(self.schedule.agents, key=lambda x: x.interbankAssets)
+        self.schedule.agents = sorted(self.schedule.agents, key=lambda x: x.interbankAssets, reverse=True)
         for i in self.schedule.agents:
             neighbors = list(adj.get(i.unique_id).keys())
             for x in neighbors:
-                i.add_edge(self.agent_by_id(x))
+                i.add_edge(self.get_agent(x))
 
     def _adj_mat(self):
         idx = [x.unique_id for x in self.schedule.agents]
@@ -88,6 +93,9 @@ class Graph(Model):
         return df
 
     def get_scheduler(self):
+        pass
+
+    def initialize_model(self):
         pass
 
 

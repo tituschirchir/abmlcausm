@@ -5,21 +5,24 @@ from network.core.skeleton import Graph
 class FinNetwork(Graph):
     def __init__(self, name, init_agents, net_type, p, k, m):
         super().__init__(name, init_agents, net_type, p, k, m)
+        self.life_history = [self.N]
         self.disburse_exposure()
 
     def apply_shock(self, pos):
-        unlucky = [x for x in self.schedule.agents if x.unique_id == pos][0]
+        unlucky = self.get_agent(pos)
         shock = unlucky.capital * 3 / 2
         unlucky.apply_initial_shock(shock)
 
     def step(self):
         self.schedule.step()
-
-    def new_node(self, unique_id):
-        return [x for x in self.init_agents if x.unique_id == unique_id][0]
+        self.life_history.append(len([x for x in self.schedule.agents if not x.defaults]))
 
     def get_scheduler(self):
         return StagedActivation(self, stage_list=["deal_with_shock"])
+
+    def initialize_model(self):
+        for x in self.schedule.agents:
+            x.model = self
 
     def disburse_exposure(self):
         for node in self.schedule.agents:

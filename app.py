@@ -19,52 +19,48 @@ layouts = ['fruchterman_reingold_layout', 'kamada_kawai_layout', 'circular_layou
 app = dash.Dash()
 app.title = "Agent-Based Modeling"
 interval_t = 1 * 1000
-app.css.append_css({"external_url": "./mycss.css"})
 app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
 app.layout = html.Div([
+    html.Div([html.H1("An Agent Based Model Framework")], style={'background-color': 'rgb(221, 241, 133)'}),
     html.P(
         hidden='',
         id='raw_container',
         style={'display': 'none'}
     ),
+    dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0),
     html.Div([
         html.Div([
-            html.Div([
-                html.Label('Number of Banks'),
-                dcc.Input(id="nofbanks", value='10', type='text'),
-                html.Label('Probability'),
-                dcc.Input(id="prob", value='0.5', type='text'),
-                html.Label('M'),
-                dcc.Input(id="m_val", value='3', type='text'),
-                html.Label('K'),
-                dcc.Input(id="k_val", value='4', type='text'),
-                dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0)
-            ], className='col'),
-            html.Div([
-                dcc.Dropdown(
-                    id='network-type-input',
-                    options=[{'label': i, 'value': i} for i in ns.all_nets],
-                    value=ns.barabasi_albert_graph,
-                    multi=False
-                )
-            ], className='col'),
-            html.Div([
-                dcc.RadioItems(
-                    id='network-layout-input',
-                    options=[{'label': k, 'value': k} for k in layouts],
-                    value="kamada_kawai_layout"
-                )
-            ], className='col')
-        ], className='col'),
+            html.Label(html.Strong('No. of Banks')),
+            dcc.Input(id="nofbanks", value='10', type='number', step=1, min=0, max=29),
+            html.Label(html.Strong('Probability')),
+            dcc.Input(id="prob", value='0.5', type='number', step=0.05, min=0, max=1)],
+            className="two columns"),
         html.Div([
-
-            html.Div([
-                html.Div([dcc.Graph(id='live-update-graph-network')],
-                         style={'width': '50%', 'display': 'inline-block'}),
-                html.Div([dcc.Graph(id='funnel-graph')], style={'width': '50%', 'display': 'inline-block'})
-            ], style={'width': '80%', 'display': 'inline-block'})
-        ], className='col')
-    ], className='row')
+            html.Label(html.Strong('M')), dcc.Input(id="m_val", value='3', type='number', step=1, min=0, max=29),
+            html.Label(html.Strong('K')), dcc.Input(id="k_val", value='4', type='number', step=1, min=2, max=28)],
+            className="two columns"),
+        html.Div([
+            html.Label(html.Strong('Network')),
+            dcc.RadioItems(
+                id='network-type-input',
+                options=[{'label': i, 'value': i} for i in ns.all_nets],
+                value=ns.barabasi_albert_graph
+            )
+        ], className='four columns'),
+        html.Div([
+            html.Label(html.Strong('Layout')),
+            dcc.RadioItems(
+                id='network-layout-input',
+                options=[{'label': k, 'value': k} for k in layouts],
+                value="kamada_kawai_layout"
+            )
+        ], className='three columns')
+    ], className='row'),
+    html.Hr(),
+    html.Div([
+        html.Div([dcc.Graph(id='live-update-graph-network')], className="four columns"),
+        html.Div([dcc.Graph(id='funnel-graph')], className="eight columns")
+    ], className='col')
 ])
 
 
@@ -80,11 +76,8 @@ def build_graph(model_):
 
 # Cache raw data
 @app.callback(Output('raw_container', 'hidden'),
-              [Input('network-type-input', 'value'),
-               Input('nofbanks', 'value'),
-               Input('prob', 'value'),
-               Input('m_val', 'value'),
-               Input('k_val', 'value')])
+              [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
+               Input('m_val', 'value'), Input('k_val', 'value')])
 def cache_raw_data(net_type, N=10, p=0.5, m=2, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
     agents = get_agents(int(N))
@@ -135,7 +128,6 @@ def update_graph_live(n, net_layout):
                   layout=Layout(
                       titlefont=dict(size=16),
                       showlegend=False,
-                      title='Teta ak moita',
                       hovermode='closest',
                       margin=dict(b=20, l=5, r=5, t=40),
                       xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
@@ -155,7 +147,7 @@ def update_graph(n):
 
     return {
         'data': [trace1, trace2, trace3, trace4, trace5],
-        'layout': go.Layout(title='Balance Sheets for the banks', barmode='stack')
+        'layout': go.Layout(barmode='stack')
     }
 
 

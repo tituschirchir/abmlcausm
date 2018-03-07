@@ -36,7 +36,7 @@ class Bank(Node):
                 self.bad_debt = self.shock - self.interbankAssets
             else:
                 self.interbankAssets -= self.shock
-        if self.capital >= self.shock:
+        if self.capital > self.shock:
             self.capital -= self.shock
             self.affected = True
         else:

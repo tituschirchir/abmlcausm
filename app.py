@@ -31,7 +31,7 @@ app.layout = html.Div([
     html.Div([
         html.Div([
             html.Label(html.Strong('No. of Banks')),
-            dcc.Input(id="nofbanks", value='10', type='number', step=1, min=0, max=29),
+            dcc.Input(id="nofbanks", value='29', type='number', step=1, min=0, max=29),
             html.Label(html.Strong('Probability')),
             dcc.Input(id="prob", value='0.5', type='number', step=0.05, min=0, max=1)],
             className="two columns"),
@@ -78,7 +78,7 @@ def build_graph(model_):
 @app.callback(Output('raw_container', 'hidden'),
               [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
                Input('m_val', 'value'), Input('k_val', 'value')])
-def cache_raw_data(net_type, N=10, p=0.5, m=2, k=3):
+def cache_raw_data(net_type, N=-1, p=0.5, m=2, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
     agents = get_agents(int(N))
     model = FinNetwork("Net 1", agents, net_type=net_type, p=float(p), m=int(m), k=int(k))
@@ -94,8 +94,8 @@ def cache_raw_data(net_type, N=10, p=0.5, m=2, k=3):
               [Input('interval-component', 'n_intervals'),
                Input('network-layout-input', 'value')])
 def update_graph_live(n, net_layout):
-    if random.random() > 0.9:
-        model.apply_shock(random.randint(0, 1))
+    if random.random() > 0.9 and sum([x.shock for x in agents]) == 0.0:
+        model.apply_shock(random.randint(0, len(agents)))
     model.step()
     banks = model.schedule.agents
     model_graph = build_graph(model)

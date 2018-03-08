@@ -10,7 +10,7 @@ class FinNetwork(Graph):
 
     def apply_shock(self, pos):
         unlucky = self.get_agent(pos)
-        shock = unlucky.capital * 3 / 2
+        shock = unlucky.capital * 5 / 2
         unlucky.apply_initial_shock(shock)
 
     def step(self):

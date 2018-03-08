@@ -3,8 +3,6 @@ import random
 
 import colorlover as cl
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import networkx as nx
 import numpy as np
 import plotly.graph_objs as go
@@ -13,8 +11,14 @@ from plotly.graph_objs import *
 
 import network.core.skeleton as ns
 from helpers.agent_fisher import get_agents
+from helpers.data_downloader import download_balance_sheet
 from network.fin.fin_model import FinNetwork
+from view.app_html import get_layout
 
+n_clicks_2 = 0
+default_tick = 'JPM,BRK.b,BAC,WFC,C,GS,USB,MS,PNC,AXP,BLK,CB,SCHW,BK,CME,AIG,MET,SPGI,COF,PRU,BBT,ICE,MMC,STT,TRV,AON,' \
+               'AFL,PGR,STI,ALL,MTB,DFS,MCO,TROW,SYF,FITB,KEY,AMP,NTRS,RF,CFG,WLTW,HIG,CMA,HBAN,LNC,PFG,ETFC,XL,L,IVZ,' \
+               'CBOE,BEN,AJG,RJF,CINF,UNM,ZION,AMG,RE,NDAQ,TMK,LUK,PBCT,BHF,AIZ,NAVI'
 margin = dict(b=40, l=40, r=0, t=10)
 layouts = ['fruchterman_reingold_layout', 'kamada_kawai_layout', 'circular_layout', 'spring_layout']
 app = dash.Dash(__name__, static_folder='assets')
@@ -22,43 +26,8 @@ app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
 app.title = "Agent-Based Modeling"
 interval_t = 1 * 1000
-# dcc._css_dist[0]['relative_package_path'].append('codePen.css')
 
-app.layout = html.Div([
-    html.Link(href='/assets/codePen.css', rel='stylesheet'),
-    html.Link(href='/assets/app.css', rel='stylesheet'),
-    html.P(hidden='', id='raw_container', style={'display': 'none'}),
-    dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0),
-    html.Div([
-        html.H2("A.B.M."),
-        html.Label(html.Strong('No. of Banks')),
-        dcc.Input(id="nofbanks", value=29, type='number', step=1, min=1, max=29),
-        html.Label(html.Strong('Probability')),
-        dcc.Input(id="prob", value=0.5, type='number', step=0.05, min=0, max=1),
-        html.Label(html.Strong('M')), dcc.Input(id="m_val", value=3, type='number', step=1, min=0, max=29),
-        html.Label(html.Strong('K')), dcc.Input(id="k_val", value=4, type='number', step=1, min=0, max=28),
-        html.Label(html.Strong('Network')),
-        dcc.RadioItems(
-            id='network-type-input',
-            options=[{'label': i, 'value': i} for i in ns.all_nets],
-            value=ns.barabasi_albert_graph
-        ),
-        html.Label(html.Strong('Layout')),
-        dcc.RadioItems(
-            id='network-layout-input',
-            options=[{'label': k, 'value': k} for k in layouts],
-            value="kamada_kawai_layout"
-        )
-    ], className="side-bar"),
-    html.Div([
-        html.Div([dcc.Graph(id='live-update-graph-network')], className="six columns"),
-        html.Div([dcc.Graph(id='show-bank-status')], className="six columns"),
-        html.Div([dcc.Graph(id='funnel-graph')], className="six columns")
-    ], className="main")
-])
-
-
-# app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
+app.layout = get_layout(interval_t, layouts)
 
 
 def build_graph(model_):
@@ -69,6 +38,17 @@ def build_graph(model_):
         for edge in node.edges:
             model_graph.add_edge(edge.node_from, edge.node_to)
     return model_graph
+
+
+@app.callback(Output('data-downloader', 'children'),
+              [Input('button', 'n_clicks'), Input('quarters', 'value')])
+def download_data(n_clicks, quarters):
+    tickers = default_tick.replace(' ', '').split(',')
+    global n_clicks_2
+    if n_clicks_2 == n_clicks:
+        return
+    n_clicks_2 = n_clicks
+    download_balance_sheet(tickers=tickers, f_loc='data/bs_ms.csv', prev_quarter=quarters)
 
 
 # Cache raw data
@@ -94,7 +74,7 @@ interval_element = Input('interval-component', 'n_intervals')
 
 @app.callback(Output('live-update-graph-network', 'figure'), [interval_element, Input('network-layout-input', 'value')])
 def update_graph_live(n, net_layout):
-    if random.random() > 0.9 and sum([x.shock for x in agents]) == 0.0:
+    if random.random() > 0.75 and sum([x.shock for x in agents]) == 0.0:
         model.apply_shock(random.randint(0, len(agents)))
     model.step()
     banks = model.schedule.agents
@@ -145,7 +125,7 @@ def update_graph(n):
 
     return {
         'data': [trace1, trace2, trace3, trace4, trace5],
-        'layout': go.Layout(barmode='stack', height=300, margin=margin)
+        'layout': go.Layout(barmode='stack', height=250, margin=margin)
     }
 
 

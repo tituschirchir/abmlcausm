@@ -82,12 +82,12 @@ class Bank(Node):
     def collect_debts(self, recovery, residual):
         total_loans = sum(x.value for x in self.in_degree)
         fract = residual / total_loans
-        if fract < 1 / recovery:
+        if fract < 1:
             for x in self.in_degree:
                 temp = x.value
                 x.value -= fract * x.value
                 x.node_from.interbank_borrowing -= temp * fract
-            self.interbankAssets -= total_loans * fract / recovery
+            self.interbankAssets -= total_loans * fract
             return residual
         else:
             for x in self.in_degree:

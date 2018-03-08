@@ -72,9 +72,10 @@ def download_balance_sheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save
     equities['Category'] = ["E"] * equities.shape[0]
     assets, liab, equities = assets.fillna(0.0), liab.fillna(0.0), equities.fillna(0.0)
     bs = pd.concat([assets, liab, equities])
-    bs = bs.drop(['Net loans'])
-    if save:
-        bs.to_csv(f_loc)
+    if not bs.empty:
+        bs = bs.drop(['Net loans'])
+        if save:
+            bs.to_csv(f_loc)
     return bs
 
 

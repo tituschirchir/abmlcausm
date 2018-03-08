@@ -29,4 +29,4 @@ kawai = "Kamada Kawai"
 layouts = ['Circular', kawai, 'Random', 'Rescale', "Shell", "Spring", "Spectral", "Fruchterman Reingold"]
 network_types = ['Erdos', 'Barabasi']
 
-morning_star = 'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=12&dataType=A&order=asc&columnYear=5&number=3'
+morning_star = 'http://financials.morningstar.com/ajax/ReportProcess4CSV.html?t={}&reportType=bs&period=3&dataType=A&order=asc&columnYear=5&number=3'

@@ -163,7 +163,7 @@ def update_graph_live(i):
                 ))
         ))
         ic += 1
-    layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Banks Alive'), margin=margin, height=300)
+    layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Relative Value'), margin=margin, height=300)
     return dict(data=graphs, layout=layout)
 
 

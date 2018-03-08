@@ -29,13 +29,13 @@ def get_side_bar(layouts):
     return html.Div([
         html.H2("Bank Network"),
         html.Label(html.Strong('No. of Nodes', title="Number of nodes")),
+        dcc.Input(id="nofbanks", value=50, type='number', step=1, min=1, max=50),
         html.Label(html.Strong('Style')),
         dcc.RadioItems(
             id='order-style',
             options=[{'label': i, 'value': i} for i in ['Random', 'Size']],
             value='Random'
         ),
-        dcc.Input(id="nofbanks", value=50, type='number', step=1, min=1, max=50),
         html.Label(html.Strong('Probability'), title="Probability for edge creation"),
         dcc.Input(id="prob", value=0.5, type='number', step=0.05, min=0, max=1),
         html.Label(html.Strong('M'), title='Number of edges to attach from a new node to existing nodes'),

@@ -5,7 +5,7 @@ from network.core.skeleton import Graph
 class FinNetwork(Graph):
     def __init__(self, name, init_agents, net_type, p, k, m):
         super().__init__(name, init_agents, net_type, p, k, m)
-        self.life_history = [self.N]
+        self.life_history = [self.schedule.agents[0].stock.S]
         self.disburse_exposure()
 
     def apply_shock(self, pos):
@@ -15,10 +15,10 @@ class FinNetwork(Graph):
 
     def step(self):
         self.schedule.step()
-        self.life_history.append(len([x for x in self.schedule.agents if not x.defaults]))
+        self.life_history.append(self.schedule.agents[0].stock.S)
 
     def get_scheduler(self):
-        return StagedActivation(self, stage_list=["deal_with_shock"])
+        return StagedActivation(self, stage_list=["equity_change"])
 
     def initialize_model(self):
         for x in self.schedule.agents:

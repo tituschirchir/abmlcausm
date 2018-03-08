@@ -18,7 +18,17 @@ class Bank(Node):
         self.affected = False
         self.counter_parties = []
         self.bad_debt = 0.0
+        self.issued_shares = 0.0
         self.edges = []
+        self.stock = None
+        self.price_history = []
+
+    def equity_change(self):
+        init_S = self.stock.S
+        self.price_history.append(init_S)
+        self.stock.evolve()
+        self.capital += (self.stock.S - init_S) * self.issued_shares
+        self.externalAssets += (self.stock.S - init_S) * self.issued_shares
 
     def apply_initial_shock(self, shock):
         self.shock = shock

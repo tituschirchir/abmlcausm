@@ -1,5 +1,4 @@
 import datetime
-import random
 
 import colorlover as cl
 import dash
@@ -74,8 +73,6 @@ interval_element = Input('interval-component', 'n_intervals')
 
 @app.callback(Output('live-update-graph-network', 'figure'), [interval_element, Input('network-layout-input', 'value')])
 def update_graph_live(n, net_layout):
-    if random.random() > 0.75 and sum([x.shock for x in agents]) == 0.0:
-        model.apply_shock(random.randint(0, len(agents)))
     model.step()
     banks = model.schedule.agents
     model_graph = build_graph(model)
@@ -129,21 +126,43 @@ def update_graph(n):
     }
 
 
+# @app.callback(Output('bank-equity', 'figure'), [interval_element])
+# def update_graph_live(i):
+#     history = model.life_history
+#     graphs = []
+#     graphs.append(go.Scatter(
+#         x=np.arange(0, len(history)),
+#         y=history,
+#         mode='dots',
+#         marker=dict(
+#             color='red',
+#             line=dict(
+#                 width=2,
+#                 color='green'
+#             ))
+#     ))
+#     layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Banks Alive'), margin=margin, height=300)
+#     return dict(data=graphs, layout=layout)
+
+
 @app.callback(Output('show-bank-status', 'figure'), [interval_element])
 def update_graph_live(i):
-    history = model.life_history
     graphs = []
-    graphs.append(go.Scatter(
-        x=np.arange(0, len(history)),
-        y=history,
-        mode='dots',
-        marker=dict(
-            color='red',
-            line=dict(
-                width=2,
-                color='green'
-            ))
-    ))
+    ic = 0
+    for x in agents:
+        graphs.append(go.Scatter(
+            x=np.arange(len(x.price_history)),
+            y=x.price_history,
+            name=x.name,
+            mode='dots',
+            marker=dict(
+                color=colors_c[ic],
+                line=dict(
+                    width=2,
+                    color=colors_c[ic]
+                ))
+        ))
+        ic += 1
     layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Banks Alive'), margin=margin, height=300)
     return dict(data=graphs, layout=layout)
 

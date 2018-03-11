@@ -8,6 +8,10 @@ def get_layout(interval_t, layouts):
     return html.Div([initial_params(interval_t), get_side_bar(layouts), get_main_body()])
 
 
+def get_nick_layout(interval_t):
+    return html.Div([initial_params(interval_t), get_nick_main_body()])
+
+
 def initial_params(interval_t):
     return html.Div([
         html.Link(href='/assets/codePen.css', rel='stylesheet'),
@@ -23,6 +27,14 @@ def get_main_body():
         html.Div([dcc.Graph(id='show-bank-status')], className="six columns"),
         html.Div([dcc.Graph(id='funnel-graph')], className="six columns")
     ], className="main")
+
+
+def get_nick_main_body():
+    return html.Div([
+        html.Label(html.Strong('No. of Nodes', title="Number of nodes")),
+        dcc.Input(id="nofagents", value=100, type='number', step=100, min=100, max=5000),
+        html.Div([dcc.Graph(id='stock_exchange')], className="six columns")
+    ], className="_main")
 
 
 def get_side_bar(layouts):

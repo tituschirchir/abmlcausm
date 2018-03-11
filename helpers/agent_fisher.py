@@ -4,47 +4,26 @@ from math import sqrt
 import pandas as pd
 from bs4 import BeautifulSoup as bs
 
+from helpers.bs_tree import get_balance_sheet_tree, flatten
 from network.fin.bank_agent import Bank
 from products.equities import Stock
 
-inter_bank_assets = ['Cash and due from banks',
-                     'Debt securities',
-                     'Deposits with banks',
-                     'Derivative assets',
-                     'Equity securities',
-                     'Federal funds sold',
-                     'Fixed maturity securities',
-                     'Investments',
-                     'Loans',
-                     'Loans, total',
-                     'Receivables',
-                     'Securities and investments',
-                     'Short-term investments',
-                     'Trading assets',
-                     'Trading securities']
-inter_bank_liabilities = ['Derivative liabilities',
-                          'Federal funds purchased',
-                          'Long-term debt',
-                          'Minority Interest',
-                          'Payables',
-                          'Payables and accrued expenses',
-                          'Short-term borrowing',
-                          'Short-term debt',
-                          'Trading liabilities',
-                          'Unearned premiums']
-
 
 def load_bs_data():
-    data = pd.read_csv('data/bs_ms.csv', index_col=0)
-    equities = data[data.Category == 'E']
-    liabilities = data[data.Category == 'L']
-    assets = data[data.Category == 'A']
-    _inter_bank_liabilities = liabilities.loc[inter_bank_liabilities]
-    _customer_deposits = liabilities.drop(inter_bank_liabilities)
-    _inter_bank_assets = assets.loc[inter_bank_assets]
-    _external_assets = assets.drop(inter_bank_assets)
-    _stock_ = equities.loc[['Common stock', 'Other Equity', 'Preferred stock']]
+    bst = get_balance_sheet_tree()
+    df = pd.read_csv('data/bs_ms.csv', index_col=0)
+    df = df.drop('Category', axis=1)
+    equities = get_rows(df, flatten(bst["Equities"]))
+    _inter_bank_assets = get_rows(df, flatten(bst["Assets"]["Interbank"]))
+    _external_assets = get_rows(df, flatten(bst["Assets"]["External"]))
+    _inter_bank_liabilities = df.loc[flatten(bst["Liabilities"]["Interbank"])]
+    _customer_deposits = get_rows(df, flatten(bst["Liabilities"]["Deposits and Others"]))
+    _stock_ = equities
     return equities, _inter_bank_liabilities, _customer_deposits, _inter_bank_assets, _external_assets, _stock_
+
+
+def get_rows(df, bst_terms):
+    return df.loc[bst_terms].dropna(axis=0, how='all')
 
 
 def get_agents(n):

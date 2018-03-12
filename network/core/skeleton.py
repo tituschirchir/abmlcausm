@@ -75,7 +75,8 @@ class Graph(Model):
         return nx.newman_watts_strogatz_graph(n=self.N, k=self.k, p=self.p)._adj
 
     def get_agent(self, id):
-        return [x for x in self.schedule.agents if x.unique_id == id][0]
+        agt = [x for x in self.schedule.agents if x.unique_id == id]
+        return agt[0] if agt else None
 
     def initialize_graph(self, adj):
         self.schedule.agents = sorted(self.schedule.agents, key=lambda x: x.interbankAssets, reverse=True)

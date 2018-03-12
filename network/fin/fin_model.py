@@ -1,3 +1,5 @@
+import random
+
 from network.core.scheduler import StagedActivation
 from network.core.skeleton import Graph
 
@@ -10,15 +12,17 @@ class FinNetwork(Graph):
 
     def apply_shock(self, pos):
         unlucky = self.get_agent(pos)
-        shock = unlucky.capital * 5 / 2
-        unlucky.apply_initial_shock(shock)
+        if unlucky:
+            shock = unlucky.capital * .25
+            unlucky.apply_initial_shock(shock)
 
     def step(self):
+        if random.random() > 0.75:
+            self.apply_shock(random.randint(0, self.N))
         self.schedule.step()
-        self.life_history.append(self.schedule.agents[0].stock.S)
 
     def get_scheduler(self):
-        return StagedActivation(self, stage_list=["equity_change"])
+        return StagedActivation(self, no_of_steps=2)
 
     def initialize_model(self):
         for x in self.schedule.agents:

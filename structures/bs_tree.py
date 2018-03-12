@@ -1,41 +1,70 @@
-from collections import defaultdict
+class TreeNode:
+    def __init__(self, name, value=0.0):
+        self.value = value
+        self.name = name
+        self.parent = None
+        self.children = []
+
+    def find_child(self, name):
+        for i in self.children:
+            if i.name == name:
+                return i
+        return None
+
+    def add_child(self, name):
+        found = self.find_child(name)
+        if found:
+            child = found
+        else:
+            child = TreeNode(name)
+            child.parent = self
+            self.children.append(child)
+        return child
+
+    def get_value(self):
+        return sum([x.value for x in self.children])
+
+    def add_children(self, args):
+        for v in args:
+            self.add_child(v)
+
+    def get_all_nodes(self, nodes):
+        if self.children:
+            for child in self.children:
+                child.get_all_nodes(nodes=nodes)
+        else:
+            nodes.append(self)
+
+    def get_all_terminal_nodes(self):
+        nodes = []
+        self.get_all_nodes(nodes)
+        return nodes
+
+    def re_aggregate(self):
+        if self.children:
+            self.value = sum([x.value for x in (self.get_all_terminal_nodes())])
+            for x in self.children:
+                x.re_aggregate()
+        if self.name == "BS":
+            self.value = self.find_child("Assets").value - self.find_child("Liabilities").value - self.find_child(
+                "Equities").value
+
+    def __str__(self):
+        return "{}: {}".format(self.name, self.value)
 
 
-class Tree(defaultdict):
-    def __call__(self):
-        return Tree(self)
-
-    def __init__(self, parent, **kwargs):
-        super().__init__(**kwargs)
-        self.parent = parent
-        self.default_factory = self
-
-
-def nodes_from_tree(tree, nodes):
-    if isinstance(tree, Tree):
-        for k, child in tree.items():
-            nodes_from_tree(child, nodes=nodes)
-    else:
-        nodes += tree
-
-
-def flatten(tree):
-    nodes = []
-    nodes_from_tree(tree, nodes)
-    return nodes
-
-
-def get_balance_sheet_tree():
-    bst = Tree(None)
-    bst["Assets"]["External"]["Liquid"] = liquid_external_assets
-    bst["Assets"]["External"]["Illiquid"] = illiquid_external_assets
-    bst["Assets"]["Interbank"]["Liquid"] = liquid_inter_bank_assets
-    bst["Assets"]["Interbank"]["Illiquid"] = illiquid_inter_bank_assets
-    bst["Liabilities"]["Interbank"]["Short Term"] = st_inter_bank_liabilities
-    bst["Liabilities"]["Interbank"]["Long Term"] = lt_inter_bank_liabilities
-    bst["Liabilities"]["Deposits and Others"]["Customer"] = customer_deposits
-    bst["Liabilities"]["Deposits and Others"]["Institutional"] = other_liabilities_
-    bst["Equities"]["Equities"]["Equities"] = equities
+def build_bs_tree():
+    bst = TreeNode("BS")
+    bst.add_child("Assets").add_child("External").add_child("Liquid").add_children(liquid_external_assets)
+    bst.add_child("Assets").add_child("External").add_child("Illiquid").add_children(illiquid_external_assets)
+    bst.add_child("Assets").add_child("Interbank").add_child("Liquid").add_children(liquid_inter_bank_assets)
+    bst.add_child("Assets").add_child("Interbank").add_child("Illiquid").add_children(illiquid_inter_bank_assets)
+    bst.add_child("Liabilities").add_child("Interbank").add_child("Short Term").add_children(st_inter_bank_liabilities)
+    bst.add_child("Liabilities").add_child("Interbank").add_child("Long Term").add_children(lt_inter_bank_liabilities)
+    bst.add_child("Liabilities").add_child("Deposits and Others").add_child("Customer").add_children(customer_deposits)
+    bst.add_child("Liabilities").add_child("Deposits and Others").add_child("Institutional").add_children(
+        other_liabilities_)
+    bst.add_child("Equities").add_children(equities)
     return bst
 
 

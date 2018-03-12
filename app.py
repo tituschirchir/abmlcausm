@@ -1,4 +1,5 @@
 import datetime
+from copy import deepcopy
 
 import colorlover as cl
 import dash
@@ -25,7 +26,7 @@ app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
 app.title = "Agent-Based Modeling"
 interval_t = 1 * 1000
-
+fresh_agents = get_agents(100)
 app.layout = get_layout(interval_t, layouts)
 
 
@@ -58,7 +59,8 @@ def cache_raw_data(net_type, N=29, p=0.5, m=3, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
     if m >= N:
         N = m + 1
-    agents = get_agents(int(N))
+    agents = fresh_agents if N >= len(fresh_agents) else fresh_agents[0:N]
+    agents = [deepcopy(x) for x in agents]
     model = FinNetwork("Net 1", agents, net_type=net_type, p=p, m=m, k=k)
     stocks = [x.name for x in agents]
     colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], len(stocks) * 20)))
@@ -124,25 +126,6 @@ def update_graph(n):
         'data': [trace1, trace2, trace3, trace4, trace5],
         'layout': go.Layout(barmode='stack', height=250, margin=margin)
     }
-
-
-# @app.callback(Output('bank-equity', 'figure'), [interval_element])
-# def update_graph_live(i):
-#     history = model.life_history
-#     graphs = []
-#     graphs.append(go.Scatter(
-#         x=np.arange(0, len(history)),
-#         y=history,
-#         mode='dots',
-#         marker=dict(
-#             color='red',
-#             line=dict(
-#                 width=2,
-#                 color='green'
-#             ))
-#     ))
-#     layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Banks Alive'), margin=margin, height=300)
-#     return dict(data=graphs, layout=layout)
 
 
 @app.callback(Output('show-bank-status', 'figure'), [interval_element])

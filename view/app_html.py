@@ -41,7 +41,7 @@ def get_side_bar(layouts):
     return html.Div([
         html.H2("Bank Network"),
         html.Label(html.Strong('No. of Nodes', title="Number of nodes")),
-        dcc.Input(id="nofbanks", value=50, type='number', step=1, min=1, max=50),
+        dcc.Input(id="nofbanks", value=25, type='number', step=1, min=1, max=25),
         html.Label(html.Strong('Style')),
         dcc.RadioItems(
             id='order-style',
@@ -51,10 +51,10 @@ def get_side_bar(layouts):
         html.Label(html.Strong('Probability'), title="Probability for edge creation"),
         dcc.Input(id="prob", value=0.5, type='number', step=0.05, min=0, max=1),
         html.Label(html.Strong('M'), title='Number of edges to attach from a new node to existing nodes'),
-        dcc.Input(id="m_val", value=3, type='number', step=1, min=0, max=50),
+        dcc.Input(id="m_val", value=3, type='number', step=1, min=0, max=25),
         html.Label(html.Strong('K-Nearest Neighbor'),
                    title='Each node is joined with its k-nearest neighbors in a ring topology.'),
-        dcc.Input(id="k_val", value=4, type='number', step=1, min=0, max=50),
+        dcc.Input(id="k_val", value=4, type='number', step=1, min=0, max=25),
         html.Label(html.Strong('Network')),
         dcc.RadioItems(
             id='network-type-input',

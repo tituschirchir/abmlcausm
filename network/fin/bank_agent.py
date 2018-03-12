@@ -1,34 +1,42 @@
 import random
 
 from network.core.skeleton import Node
+from products.equities import Stock
+from structures.bank_structures import BalanceSheet
 
 
 class Bank(Node):
-    def __init__(self, name, unique_id, model):
+    def __init__(self, name, unique_id, model, data, mu, std):
         super().__init__(unique_id, model)
         self.name = name
-        self.interbankAssets = 0.0
-        self.interbank_borrowing = 0.0
-        self.externalAssets = 0.0
-        self.capital = 0.0
-        self.customer_deposits = 0.0
+        self.balance_sheet = BalanceSheet(data)
+        self.interbankAssets = self.balance_sheet.get_level("Assets", "Interbank").value
+        self.interbank_borrowing = self.balance_sheet.get_level("Liabilities", "Interbank").value
+        self.externalAssets = self.balance_sheet.get_level("Assets", "External").value
+        self.capital = self.balance_sheet.get_level("Equities").value
+        self.customer_deposits = self.balance_sheet.get_level("Liabilities", "Deposits and Others").value
         self.visits = 0
         self.shock = 0.0
-        self.defaults = False
-        self.affected = False
+        self.defaults, self.affected = False, False
         self.counter_parties = []
         self.bad_debt = 0.0
-        self.issued_shares = 0.0
+        self.issued_shares = self.capital
         self.edges = []
-        self.stock = None
+        self.stock = Stock(S=1.0, mu=mu / 100, std=std / 100, dt=1.0 / 252.)
         self.price_history = []
 
+    def step_1(self):
+        self.equity_change()
+
+    def step_2(self):
+        self.deal_with_shock()
+
     def equity_change(self):
-        init_S = self.stock.S
-        self.price_history.append(init_S)
+        init__s = self.stock.S
+        self.price_history.append(init__s)
         self.stock.evolve()
-        self.capital += (self.stock.S - init_S) * self.issued_shares
-        self.externalAssets += (self.stock.S - init_S) * self.issued_shares
+        self.capital += (self.stock.S - init__s) * self.issued_shares
+        self.externalAssets += (self.stock.S - init__s) * self.issued_shares
 
     def apply_initial_shock(self, shock):
         self.shock = shock
@@ -57,6 +65,7 @@ class Bank(Node):
             if residual - debt_collected > 0.0:
                 self.deal_with_bankruptcy(residual - debt_collected)
         self.shock = 0.0
+        self.stock.S = self.capital / self.issued_shares
 
     def deal_with_bankruptcy(self, residual):
         if random.random() > 0.25:

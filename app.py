@@ -79,7 +79,7 @@ def update_graph_live(n, net_layout):
     banks = model.schedule.agents
     model_graph = build_graph(model)
     txt = [x.name for x in banks]
-    equities = [x.capital for x in banks]
+    equities = [x.balance_sheet.find_node("Equities").value for x in banks]
     equities = np.asarray(equities) / sum(equities)
     mx_eq = max(equities)
     equities = equities * 50 / mx_eq + 20
@@ -116,11 +116,11 @@ def update_graph_live(n, net_layout):
 @app.callback(Output('funnel-graph', 'figure'), [interval_element])
 def update_graph(n):
     x = [x.name for x in agents]
-    trace1 = go.Bar(x=x, y=[x.interbankAssets * 1000000 for x in agents], name='Loan Assets')
-    trace2 = go.Bar(x=x, y=[x.externalAssets * 1000000 for x in agents], name='External Assets')
-    trace3 = go.Bar(x=x, y=[x.customer_deposits * 1000000 for x in agents], name='Deposits')
-    trace4 = go.Bar(x=x, y=[x.interbank_borrowing * 1000000 for x in agents], name='Loan Liabilities')
-    trace5 = go.Bar(x=x, y=[x.capital * 1000000 for x in agents], name='Capital')
+    trace1 = go.Bar(x=x, y=[x.interbankAssets.value * 1000000 for x in agents], name='Loan Assets')
+    trace2 = go.Bar(x=x, y=[x.externalAssets.value * 1000000 for x in agents], name='External Assets')
+    trace3 = go.Bar(x=x, y=[x.customer_deposits.value * 1000000 for x in agents], name='Deposits')
+    trace4 = go.Bar(x=x, y=[x.interbank_borrowing.value * 1000000 for x in agents], name='Loan Liabilities')
+    trace5 = go.Bar(x=x, y=[x.capital.value * 1000000 for x in agents], name='Capital')
 
     return {
         'data': [trace1, trace2, trace3, trace4, trace5],

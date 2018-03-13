@@ -79,7 +79,7 @@ class Graph(Model):
         return agt[0] if agt else None
 
     def initialize_graph(self, adj):
-        self.schedule.agents = sorted(self.schedule.agents, key=lambda x: x.interbankAssets, reverse=True)
+        self.schedule.agents = sorted(self.schedule.agents, key=lambda x: x.interbankAssets.value, reverse=True)
         for i in self.schedule.agents:
             neighbors = list(adj.get(i.unique_id).keys())
             for x in neighbors:

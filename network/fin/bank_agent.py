@@ -24,6 +24,7 @@ class Bank(Node):
         self.issued_shares = self.capital.value
         self.price_history = [1.0]
         self.stock = Stock(S=1.0, mu=time_series.mu, std=time_series.vol, dt=1.0 / 252.)
+        self.allocated_credit = self.balance_sheet.find_node_series("Liabilities", "Interbank").value
 
     def step_1(self):
         self.equity_change()
@@ -63,7 +64,8 @@ class Bank(Node):
             allowance_for_losses.value += self.shock
         else:
             self.shock += allowance_for_losses.value
-            double_entry(allowance_for_losses, self.balance_sheet.find_node(bst.loans), allowance_for_losses.value, 'di')
+            double_entry(allowance_for_losses, self.balance_sheet.find_node(bst.loans), allowance_for_losses.value,
+                         'di')
             if self.capital.value > self.shock:
                 self.capital.value -= self.shock
                 self.affected = True

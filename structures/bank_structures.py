@@ -25,8 +25,8 @@ class TreeNode:
         return None
 
     def find_node_series(self, *args):
-        node = self.find_node(args[0])
-        for arg in args[1:]:
+        node = self
+        for arg in args:
             node = node.find_node(arg)
         return node
 
@@ -69,7 +69,7 @@ class TreeNode:
                 self.value = sum([x.value for x in (self.get_all_terminal_nodes())])
             for x in self.children:
                 x.re_aggregate()
-        if self.name == "BS":
+        if not self.parent:
             self.value = self.find_child("Assets").value - self.find_child("Liabilities").value - self.find_child(
                 "Equities").value
 
@@ -93,7 +93,7 @@ class BalanceSheet(TreeNode):
             to_drop = None
             for idx in data.index:
                 if node.name == idx:
-                    node.value = data[idx] + 3.0
+                    node.value = data[idx]
                     to_drop = idx
                     break
             if to_drop:
@@ -126,10 +126,10 @@ class TimeSeries:
         return np.divide(as_array[1:self.N] - init_val, init_val)
 
     def mean_returns(self):
-        return np.average(self.returns)
+        return np.average(self.returns) * 252
 
     def standard_dev(self):
-        return np.std(self.returns)
+        return np.std(self.returns) * np.math.sqrt(252)
 
     def __str__(self):
         return "Mean: {} StDev: {}".format(self.mu, self.vol)

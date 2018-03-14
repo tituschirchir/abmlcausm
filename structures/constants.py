@@ -5,6 +5,8 @@ cash_and_due_from_banks = 'Cash and due from banks'
 debt_securities = 'Debt securities'
 deferred_income_tax_assets = 'Deferred income tax assets'
 deferred_income_taxes = 'Deferred income taxes'
+deferred_income_taxes_liabilities = 'Deferred income taxes - L'
+deferred_taxes_liabilities = 'Deferred taxes liabilities'
 deferred_policy_acquisition_costs = 'Deferred policy acquisition costs'
 deposits_with_banks = 'Deposits with banks'
 derivative_assets = 'Derivative assets'
@@ -24,6 +26,7 @@ other_long_term_assets = 'Other long-term assets'
 premises_and_equipment = 'Premises and equipment'
 premiums_and_other_receivables = 'Premiums and other receivables'
 prepaid_expenses = 'Prepaid expenses'
+prepaid_pension_benefit = 'Prepaid pension benefit'
 property_and_equipment = 'Property and equipment'
 receivables = 'Receivables'
 restricted_cash = 'Restricted cash'
@@ -45,6 +48,7 @@ federal_funds_purchased = 'Federal funds purchased'
 future_policy_benefits = 'Future policy benefits'
 long_term_debt = 'Long-term debt'
 minority_interest = 'Minority Interest'
+minority__interest = 'Minority interest'
 other_current_liabilities = 'Other current liabilities'
 other_liabilities = 'Other liabilities'
 other_long_term_liabilities = 'Other long-term liabilities'
@@ -64,19 +68,23 @@ other_equity = 'Other Equity'
 preferred_stock = 'Preferred stock'
 retained_earnings = 'Retained earnings'
 treasury_stock = 'Treasury stock'
+equity_and_other_investments = "Equity and other investments"
+inventories = "Inventories"
+pensions_and_other_benefits = "Pensions and other benefits"
 
-liquid_inter_bank_assets = [deposits_with_banks, cash_and_due_from_banks, federal_funds_sold, short_term_investments]
+liquid_inter_bank_assets = [deposits_with_banks, cash_and_due_from_banks, federal_funds_sold, short_term_investments,
+                            equity_and_other_investments]
 illiquid_inter_bank_assets = [debt_securities, derivative_assets, equity_securities, fixed_maturity_securities,
                               investments, loans, loans__total, receivables, securities_and_investments, trading_assets,
                               trading_securities]
 
 liquid_external_assets = [restricted_cash_and_cash_equivalents, allowance_for_loan_losses,
                           securities_borrowed, cash_and_cash_equivalents, restricted_cash,
-                          separate_account_assets, other_current_assets]
+                          separate_account_assets, other_current_assets, inventories]
 
 illiquid_external_assets = [deferred_income_taxes, other_intangible_assets, deferred_income_tax_assets,
                             deferred_policy_acquisition_costs, other_assets,
-                            property_and_equipment, premises_and_equipment, prepaid_expenses,
+                            property_and_equipment, premises_and_equipment, prepaid_expenses, prepaid_pension_benefit,
                             premiums_and_other_receivables, accrued_investment_income,
                             net_property__plant_and_equipment, other_long_term_assets, goodwill,
                             intangible_assets]
@@ -84,11 +92,12 @@ illiquid_external_assets = [deferred_income_taxes, other_intangible_assets, defe
 st_inter_bank_liabilities = [federal_funds_purchased, unearned_premiums, payables, derivative_liabilities,
                              payables_and_accrued_expenses, short_term_borrowing, short_term_debt, trading_liabilities]
 
-lt_inter_bank_liabilities = [long_term_debt, minority_interest]
+lt_inter_bank_liabilities = [long_term_debt, minority_interest, minority__interest, pensions_and_other_benefits]
 
 customer_deposits = [deposits, deferred_revenues, accounts_payable, accrued_liabilities, separate_account_liabilities,
                      accrued_expenses_and_liabilities, other_current_liabilities]
-other_liabilities_ = [deferred_income_taxes, other_long_term_liabilities, future_policy_benefits, policyholder_funds,
+other_liabilities_ = [deferred_income_taxes_liabilities, deferred_taxes_liabilities,
+                      other_long_term_liabilities, future_policy_benefits, policyholder_funds,
                       other_liabilities, deferred_taxes, taxes_payable]
 
 inter_bank_assets = liquid_inter_bank_assets + illiquid_inter_bank_assets

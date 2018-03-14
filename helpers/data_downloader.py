@@ -1,31 +1,10 @@
 import csv
-import math
 import os
 
 import pandas as pd
-import pandas_datareader as web
 import requests
 
 import data.meta_data as md
-
-
-def download_data(start, end, stocks_list, lag=1):
-    # We will look at stock prices over the past year, starting at January 1, 2016
-    xf = "data/stats.csv"
-    if os.path.isfile(xf):
-        stats = pd.read_csv(xf, index_col=0)
-    else:
-        all_stocks = [v for k, v in md.tickers.items()]
-        apple = web.DataReader(all_stocks, "google", start, end)
-        stocks = apple["Close", :, :]
-        stock_return = stocks.apply(lambda x: (x - x.shift(lag)) / x)
-        stock_return = stock_return.dropna(axis=0, how='any')
-        stats = stock_return.describe().T
-        stats['annual_ret'] = stats['mean'] * 252 / lag
-        stats['annual_std'] = stats['std'] * math.sqrt(252 / lag)
-        stats['current_price'] = stocks[-1:].T.values
-        stats.to_csv(xf)
-    return stats.ix[stocks_list]
 
 
 def download_balance_sheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save=True):
@@ -55,11 +34,15 @@ def download_balance_sheet(tickers, f_loc='data/bs_ms.csv', prev_quarter=3, save
             elif len(row) > 1 and "Total" not in row[0] and row[i_loc] != '':
                 value = float(row[i_loc])
                 if i < arr_v[1]:
+                    value += assets2.loc[row[0]] if row[0] in assets2.index else 0
                     assets2.loc[row[0]] = [value]
                 elif i >= arr_v[2]:
+                    value += equities2.loc[row[0]] if row[0] in equities2.index else 0
                     equities2.loc[row[0]] = [value]
                 else:
-                    liab2.loc[row[0]] = [value]
+                    name = 'Deferred income taxes - L' if row[0] == 'Deferred income taxes' else row[0]
+                    value += liab2.loc[name] if name in liab2.index else 0
+                    liab2.loc[name] = [value]
                 is_reached = True
             i += 1
         if not equities2.empty and not liab2.empty and not assets2.empty:
@@ -87,40 +70,3 @@ def bs_load_all_and_filter(tickers, new=False, f_loc='/data/bs_ms.csv', save=Tru
         bs = pd.read_csv(f_loc, index_col=0)
     tickers = list(set(bs.columns & tickers))
     return bs[tickers + ['Category']], tickers
-
-
-def get_balance_sheet_as_data_frames():
-    inter_bank_assets = ['Cash and due from banks',
-                         'Debt securities',
-                         'Deposits with banks',
-                         'Derivative assets',
-                         'Equity securities',
-                         'Federal funds sold',
-                         'Fixed maturity securities',
-                         'Investments',
-                         'Loans',
-                         'Loans, total',
-                         'Receivables',
-                         'Securities and investments',
-                         'Short-term investments',
-                         'Trading assets',
-                         'Trading securities']
-    inter_bank_liabilities = ['Derivative liabilities',
-                              'Federal funds purchased',
-                              'Long-term debt',
-                              'Minority Interest',
-                              'Payables',
-                              'Payables and accrued expenses',
-                              'Short-term borrowing',
-                              'Short-term debt',
-                              'Trading liabilities',
-                              'Unearned premiums']
-    data = pd.read_csv('data/bs_ms.csv', index_col=0)
-    _equities = data[data.Category == 'E']
-    liabilities = data[data.Category == 'L']
-    assets = data[data.Category == 'A']
-    _inter_bank_liabilities = liabilities.loc[inter_bank_liabilities]
-    _customer_deposits = liabilities.drop(inter_bank_liabilities)
-    _inter_bank_assets = assets.loc[inter_bank_assets]
-    _external_assets = assets.drop(inter_bank_assets)
-    return _inter_bank_assets, _inter_bank_liabilities, _customer_deposits, _external_assets, _equities

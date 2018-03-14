@@ -55,7 +55,7 @@ def download_data(n_clicks, quarters):
 @app.callback(Output('raw_container', 'hidden'),
               [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
                Input('m_val', 'value'), Input('k_val', 'value')])
-def cache_raw_data(net_type, N=29, p=0.5, m=3, k=3):
+def cache_raw_data(net_type, N=29, p=0.9, m=3, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
     if m >= N:
         N = m + 1
@@ -116,11 +116,11 @@ def update_graph_live(n, net_layout):
 @app.callback(Output('funnel-graph', 'figure'), [interval_element])
 def update_graph(n):
     x = [x.name for x in agents]
-    trace1 = go.Bar(x=x, y=[x.interbankAssets.value * 1000000 for x in agents], name='Loan Assets')
-    trace2 = go.Bar(x=x, y=[x.externalAssets.value * 1000000 for x in agents], name='External Assets')
-    trace3 = go.Bar(x=x, y=[x.customer_deposits.value * 1000000 for x in agents], name='Deposits')
-    trace4 = go.Bar(x=x, y=[x.interbank_borrowing.value * 1000000 for x in agents], name='Loan Liabilities')
-    trace5 = go.Bar(x=x, y=[x.capital.value * 1000000 for x in agents], name='Capital')
+    trace1 = go.Bar(x=x, y=[x.interbankAssets.value for x in agents], name='Loan Assets')
+    trace2 = go.Bar(x=x, y=[x.externalAssets.value for x in agents], name='External Assets')
+    trace3 = go.Bar(x=x, y=[x.customer_deposits.value for x in agents], name='Deposits')
+    trace4 = go.Bar(x=x, y=[x.interbank_borrowing.value for x in agents], name='Loan Liabilities')
+    trace5 = go.Bar(x=x, y=[x.capital.value for x in agents], name='Capital')
 
     return {
         'data': [trace1, trace2, trace3, trace4, trace5],
@@ -131,21 +131,10 @@ def update_graph(n):
 @app.callback(Output('show-bank-status', 'figure'), [interval_element])
 def update_graph_live(i):
     graphs = []
-    ic = 0
-    for x in agents:
-        graphs.append(go.Scatter(
-            x=np.arange(len(x.price_history)),
-            y=x.price_history,
-            name=x.name,
-            mode='dots',
-            marker=dict(
-                color=colors_c[ic],
-                line=dict(
-                    width=2,
-                    color=colors_c[ic]
-                ))
-        ))
-        ic += 1
+    for ic, x in enumerate(agents):
+        graphs.append(go.Scatter(x=np.arange(len(x.price_history)), y=x.price_history,
+                                 name=x.name, mode='dots',
+                                 marker=dict(color=colors_c[ic], line=dict(width=2, color=colors_c[ic]))))
     layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Relative Value'), margin=margin, height=300)
     return dict(data=graphs, layout=layout)
 

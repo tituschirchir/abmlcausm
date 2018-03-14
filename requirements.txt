@@ -1,8 +1,9 @@
+quandl
+networkx
 colorlover
 dash
 dash-renderer
 dash-html-components
 dash-core-components
 scipy
-networkx==2.1
 pandas-datareader

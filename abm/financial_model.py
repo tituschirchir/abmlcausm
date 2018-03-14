@@ -2,10 +2,10 @@ import datetime
 import random
 
 import pandas as pd
-from network.scheduler import StagedActivation
 
-from network.bank_agent import Bank
-from network.network_structure import Graph
+from abm.bank_agent import Bank
+from network.core.scheduler import StagedActivation
+from network.core.skeleton import Graph
 from products.derivatives import Derivative
 from products.positions import Position
 

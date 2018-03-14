@@ -1,6 +1,6 @@
-from network.components import Agent
+from network.core.components import Agent
 
 
-class FDIC(Agent):
+class FED(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)

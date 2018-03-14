@@ -3,4 +3,10 @@
 /data/stocks.csv
 /data/balance_sheet.csv
 .idea/*
-/data/bs_ms.csv
+network/core/__pycache__/
+network/fin/__pycache__/
+abm/__pycache__/
+data/__pycache__/
+data/bs_testing.csv
+helpers/__pycache__/
+view/__pycache__/

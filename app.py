@@ -1,157 +1,99 @@
 import datetime
+from copy import deepcopy
 
 import colorlover as cl
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import networkx as nx
 import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from plotly.graph_objs import *
 
-import helpers.data_downloader as dd
-from data.meta_data import network_layouts, layouts, kawai, network_types
-from data.meta_data import tickers
-from network import bank_agent as ba
-from network.financial_model import FinancialModel
+import network.core.skeleton as ns
+from helpers.agent_fisher import get_agents
+from helpers.data_downloader import download_balance_sheet
+from network.fin.fin_model import FinNetwork
+from view.app_html import get_layout
 
-app = dash.Dash()
+n_clicks_2 = 0
+default_tick = 'JPM,BRK.b,BAC,WFC,C,GS,USB,MS,PNC,AXP,BLK,CB,SCHW,BK,CME,AIG,MET,SPGI,COF,PRU,BBT,ICE,MMC,STT,TRV,AON,' \
+               'AFL,PGR,STI,ALL,MTB,DFS,MCO,TROW,SYF,FITB,KEY,AMP,NTRS,RF,CFG,WLTW,HIG,CMA,HBAN,LNC,PFG,ETFC,XL,L,IVZ,' \
+               'CBOE,BEN,AJG,RJF,CINF,UNM,ZION,AMG,RE,NDAQ,TMK,LUK,PBCT,BHF,AIZ,NAVI'
+margin = dict(b=40, l=40, r=0, t=10)
+layouts = ['fruchterman_reingold_layout', 'kamada_kawai_layout', 'circular_layout', 'spring_layout']
+app = dash.Dash(__name__, static_folder='assets')
+app.scripts.config.serve_locally = True
+app.css.config.serve_locally = True
 app.title = "Agent-Based Modeling"
-def_tickers = ['JPM', 'GS', 'MS', 'BAC', 'C']
-interval_t = 1 * 500
-app.layout = html.Div([
-    html.P(
-        hidden='',
-        id='raw_container',
-        style={'display': 'none'}
-    ),
-    dcc.Interval(id='interval-component', interval=interval_t, n_intervals=0),
-    html.Div([
-        html.Div([
-            dcc.Dropdown(
-                id='network-type-input',
-                options=[{'label': i, 'value': i} for i in network_types],
-                value='Barabasi',
-                multi=False
-            )
-        ], style={'width': '49%', 'display': 'inline-block'}),
+interval_t = 1 * 1000
+fresh_agents = get_agents(100)
+app.layout = get_layout(interval_t, layouts)
 
-        html.Div([
-            dcc.RadioItems(
-                id='network-layout-input',
-                options=[{'label': k, 'value': k} for k in layouts],
-                value=kawai,
-                labelStyle={'display': 'inline-block'}
-            )
-        ], style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
-    ], style={
-        'borderBottom': 'thin lightgrey solid',
-        'backgroundColor': 'rgb(250, 250, 250)',
-        'padding': '10px 5px'
-    }),
-    html.Div([
-        html.Div([
-            dcc.Graph(id='live-update-graph')
-        ], style={'width': '25%', 'display': 'inline-block'}),
-        html.Div([
-            dcc.Graph(id='live-update-graph-network')
-        ], style={'width': '25%', 'display': 'inline-block'}),
-        html.Div([
-            dcc.Graph(id='live-update-graph-scatter')
-        ], style={'width': '50%', 'display': 'inline-block'})
-    ]),
-    html.Hr(),
-    html.Div([
-        dcc.Dropdown(
-            id='stock-ticker-input',
-            options=[{'label': i, 'value': j} for i, j in tickers.items()],
-            value=def_tickers,
-            multi=True
-        )
-    ], style={'display': 'inline-block'})
-])
+
+def build_graph(model_):
+    import networkx as nx
+    model_graph = nx.Graph()
+    for node in model_.schedule.agents:
+        model_graph.add_node(node)
+        for edge in node.edges:
+            model_graph.add_edge(edge.node_from, edge.node_to)
+    return model_graph
+
+
+@app.callback(Output('data-downloader', 'children'),
+              [Input('button', 'n_clicks'), Input('quarters', 'value')])
+def download_data(n_clicks, quarters):
+    tickers = default_tick.replace(' ', '').split(',')
+    global n_clicks_2
+    if n_clicks_2 == n_clicks:
+        return
+    n_clicks_2 = n_clicks
+    download_balance_sheet(tickers=tickers, f_loc='data/bs_ms.csv', prev_quarter=quarters)
 
 
 # Cache raw data
 @app.callback(Output('raw_container', 'hidden'),
-              [Input('stock-ticker-input', 'value'),
-               Input('network-type-input', 'value')])
-def cache_raw_data(tickers, network_type):
-    global model, data2, end, colors_c, stocks, initiated
-    model, data2, end, colors_c, stocks = initialize(tickers, network_type)
+              [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
+               Input('m_val', 'value'), Input('k_val', 'value')])
+def cache_raw_data(net_type, N=29, p=0.5, m=3, k=3):
+    global model, data2, end, colors_c, stocks, initiated, agents
+    if m >= N:
+        N = m + 1
+    agents = fresh_agents if N >= len(fresh_agents) else fresh_agents[0:N]
+    agents = [deepcopy(x) for x in agents]
+    model = FinNetwork("Net 1", agents, net_type=net_type, p=p, m=m, k=k)
+    stocks = [x.name for x in agents]
+    colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], len(stocks) * 20)))
+    colors_c = np.asarray(colors_)[np.arange(0, len(stocks) * 20, 20)]
+    end = datetime.date.today()
     print('Loaded raw data')
     return 'loaded'
 
 
-# Multiple components can update everytime interval gets fired.
-@app.callback(Output('live-update-graph-scatter', 'figure'),
-              [Input('interval-component', 'n_intervals')])
-def update_graph_live(i):
-    all_agents = model.all_agents.sort_index(axis=1)
-    graphs = []
-    ic = 0
-    for fx in stocks:
-        graphs.append(go.Scatter(
-            x=all_agents.index,
-            y=all_agents[fx],
-            mode='lines',
-            name=fx,
-            marker=dict(
-                color=colors_c[ic],
-                line=dict(
-                    width=2,
-                    color=colors_c[ic]
-                ))
-        ))
-        ic += 1
-    layout = dict(xaxis=dict(title='Date'), yaxis=dict(title='Cash in Hand'), )
-    return dict(data=graphs, layout=layout)
+interval_element = Input('interval-component', 'n_intervals')
 
 
-# Multiple components can update everytime interval gets fired.
-@app.callback(Output('live-update-graph', 'figure'),
-              [Input('interval-component', 'n_intervals')])
-def update_graph_live(n):
-    banks = model.schedule.agents
-    banks = sorted(banks, key=lambda bank: bank.ticker, reverse=False)
-    labels = [x.ticker for x in banks]
-    values = [x.equity for x in banks]
-    layout = dict(xaxis=dict(title='Date'),
-                  yaxis=dict(title='Cash in Hand'),
-                  showlegend=False)
-
-    trace = go.Pie(labels=labels, values=values, hole=.25, pull=.005, sort=False, textinfo='percent+label',
-                   marker=dict(colors=colors_c))
-
-    fig = dict(data=[trace], layout=layout)
-
-    return fig
-
-
-# Multiple components can update everytime interval gets fired.
-@app.callback(Output('live-update-graph-network', 'figure'),
-              [Input('interval-component', 'n_intervals'),
-               Input('network-layout-input', 'value')])
-def update_graph_live(n, network_layout):
+@app.callback(Output('live-update-graph-network', 'figure'), [interval_element, Input('network-layout-input', 'value')])
+def update_graph_live(n, net_layout):
     model.step()
-    model_graph = model.graph
-    banks = list(nx.get_node_attributes(model_graph, 'bank').values())
-    txt = [x.ticker for x in banks]
-    equities = [x.equity for x in banks]
-    equities = equities / sum(equities)
+    banks = model.schedule.agents
+    model_graph = build_graph(model)
+    txt = [x.name for x in banks]
+    equities = [x.balance_sheet.find_node("Equities").value for x in banks]
+    equities = np.asarray(equities) / sum(equities)
     mx_eq = max(equities)
-    equities = equities * 50 / mx_eq + 25
-    pos = network_layouts[network_layout](model_graph)
+    equities = equities * 50 / mx_eq + 20
+
+    pos = getattr(nx, net_layout)(model_graph)
     orange, red, green = 'rgb(244, 194, 66)', 'rgb(237, 14, 14)', 'rgb(14, 209, 53)'
-    node_colors = [orange if x.state == ba.infected else (red if x.state == ba.dead else green) for x in banks]
+    node_colors = [(red if x.defaults else (orange if x.affected else green)) for x in banks]
     edge_trace = Scatter(x=[], y=[], line=Line(width=2.5, color='#888'), hoverinfo='none', mode='lines')
     node_trace = Scatter(x=[], y=[], text=txt, mode='markers+text+value', hoverinfo='text', marker=Marker(
         color=node_colors,
         size=equities,
         line=dict(width=2)))
 
-    for st in txt:
+    for st in banks:
         x0, y0 = pos[st]
         node_trace['x'].append(x0)
         node_trace['y'].append(y0)
@@ -160,33 +102,54 @@ def update_graph_live(n, network_layout):
             x1, y1 = pos[nei]
             edge_trace['x'] += [x0, x1, None]
             edge_trace['y'] += [y0, y1, None]
-
     return Figure(data=Data([edge_trace, node_trace]),
                   layout=Layout(
                       titlefont=dict(size=16),
                       showlegend=False,
-                      title='Residual shock: {};.<br> Dead: {} <br> Bad Debt: {}'
-                          .format(model.shock, model.dead, model.total_bad_debt()),
                       hovermode='closest',
-                      margin=dict(b=20, l=5, r=5, t=40),
+                      margin=margin,
+                      height=600,
                       xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
                       yaxis=YAxis(showgrid=False, zeroline=False, showticklabels=False)))
 
 
-def initialize(stocks, network_type):
-    dt = 1 / 252.0
-    end = datetime.date.today()
-    s_l = len(stocks)
-    stocks.sort(reverse=False)
-    colors_ = (cl.to_rgb(cl.interp(cl.scales['6']['qual']['Set1'], s_l * 20)))
-    colors_c = np.asarray(colors_)[np.arange(0, s_l * 20, 20)]
-    start = datetime.datetime(2016, 1, 1)
-    data2, stocks = dd.bs_load_all_and_filter(tickers=stocks)
-    stock_data = dd.download_data(start, end, stocks)
-    model = FinancialModel(data2, stock_data, network_type=network_type)
-    return model, data2, end, colors_c, stocks
+@app.callback(Output('funnel-graph', 'figure'), [interval_element])
+def update_graph(n):
+    x = [x.name for x in agents]
+    trace1 = go.Bar(x=x, y=[x.interbankAssets.value * 1000000 for x in agents], name='Loan Assets')
+    trace2 = go.Bar(x=x, y=[x.externalAssets.value * 1000000 for x in agents], name='External Assets')
+    trace3 = go.Bar(x=x, y=[x.customer_deposits.value * 1000000 for x in agents], name='Deposits')
+    trace4 = go.Bar(x=x, y=[x.interbank_borrowing.value * 1000000 for x in agents], name='Loan Liabilities')
+    trace5 = go.Bar(x=x, y=[x.capital.value * 1000000 for x in agents], name='Capital')
+
+    return {
+        'data': [trace1, trace2, trace3, trace4, trace5],
+        'layout': go.Layout(barmode='stack', height=250, margin=margin)
+    }
+
+
+@app.callback(Output('show-bank-status', 'figure'), [interval_element])
+def update_graph_live(i):
+    graphs = []
+    ic = 0
+    for x in agents:
+        graphs.append(go.Scatter(
+            x=np.arange(len(x.price_history)),
+            y=x.price_history,
+            name=x.name,
+            mode='dots',
+            marker=dict(
+                color=colors_c[ic],
+                line=dict(
+                    width=2,
+                    color=colors_c[ic]
+                ))
+        ))
+        ic += 1
+    layout = dict(xaxis=dict(title='Step'), yaxis=dict(title='Relative Value'), margin=margin, height=300)
+    return dict(data=graphs, layout=layout)
 
 
 if __name__ == '__main__':
-    cache_raw_data(tickers=def_tickers, network_type="Barabasi")
+    cache_raw_data(ns.barabasi_albert_graph)
     app.run_server(debug=True, port=3434)

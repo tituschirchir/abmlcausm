@@ -1,5 +1,4 @@
 import random
-from multiprocessing import Pool
 
 
 class BaseScheduler:
@@ -11,6 +10,10 @@ class BaseScheduler:
 
     def add(self, agent):
         self.agents.append(agent)
+
+    def add_all(self, agents):
+        for x in agents:
+            self.add(x)
 
     def remove(self, agent):
         while agent in self.agents:
@@ -46,9 +49,9 @@ class SimultaneousActivation(BaseScheduler):
 
 
 class StagedActivation(BaseScheduler):
-    def __init__(self, model, stage_list=None, shuffle=False, shuffle_between_stages=False):
+    def __init__(self, model, no_of_steps, shuffle=False, shuffle_between_stages=False):
         super().__init__(model)
-        self.stage_list = ["step"] if not stage_list else stage_list
+        self.stage_list = ["step_{}".format(i + 1) for i in range(no_of_steps)]
         self.shuffle = shuffle
         self.shuffle_between_stages = shuffle_between_stages
         self.stage_time = 1 / len(self.stage_list)

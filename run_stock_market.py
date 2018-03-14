@@ -1,5 +1,6 @@
-from abm_market.model import MarketModel
 import matplotlib.pyplot as mpl
+
+from abm_market.model import MarketModel
 
 model = MarketModel(1000)
 for i in range(200):

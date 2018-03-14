@@ -26,8 +26,9 @@ class TreeNode:
 
     def find_node_series(self, *args):
         node = self
-        for arg in args:
-            node = node.find_node(arg)
+        if node:
+            for arg in args:
+                    node = node.find_node(arg)
         return node
 
     def find_node(self, x):

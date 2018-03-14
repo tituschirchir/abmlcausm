@@ -1,15 +1,14 @@
 import random
 
+import structures.shock_absorber as sa
 from network.core.scheduler import StagedActivation
 from network.core.skeleton import Graph
-from structures.shock_absorber import ExposureAllocator
 
 
 class FinNetwork(Graph):
     def __init__(self, name, init_agents, net_type, p, k, m):
         super().__init__(name, init_agents, net_type, p, k, m)
-        allocator = ExposureAllocator(self.schedule.agents)
-        allocator.disburse_exposure()
+        sa.allocate(self.schedule.agents)
 
     def apply_shock(self, pos):
         unlucky = self.get_agent(pos)

@@ -25,7 +25,7 @@ def allocate_debt(bank, batches):
     allocatable = min(to_operate, nearby_credit)
     if nearby_credit > 0.0:
         for edge in bank.edges:
-            d2 = allocatable * edge.node_to.unallocated_credit / nearby_credit
+            d2 = round(allocatable * edge.node_to.unallocated_credit / nearby_credit, 4)
             edge.value += d2
             edge.node_to.unallocated_credit -= d2
             bank.unallocated_debt -= d2

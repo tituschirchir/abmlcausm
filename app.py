@@ -9,7 +9,6 @@ import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from plotly.graph_objs import *
 
-import network.core.skeleton as ns
 from helpers.agent_fisher import get_agents
 from helpers.data_downloader import download_balance_sheet
 from network.fin.fin_model import FinNetwork
@@ -55,7 +54,7 @@ def download_data(n_clicks, quarters):
 @app.callback(Output('raw_container', 'hidden'),
               [Input('network-type-input', 'value'), Input('nofbanks', 'value'), Input('prob', 'value'),
                Input('m_val', 'value'), Input('k_val', 'value')])
-def cache_raw_data(net_type, N=29, p=0.9, m=3, k=3):
+def cache_raw_data(net_type, N=25, p=0.5, m=3, k=3):
     global model, data2, end, colors_c, stocks, initiated, agents
     if m >= N:
         N = m + 1
@@ -75,6 +74,7 @@ interval_element = Input('interval-component', 'n_intervals')
 
 @app.callback(Output('live-update-graph-network', 'figure'), [interval_element, Input('network-layout-input', 'value')])
 def update_graph_live(n, net_layout):
+    init()
     model.step()
     banks = model.schedule.agents
     model_graph = build_graph(model)
@@ -113,8 +113,16 @@ def update_graph_live(n, net_layout):
                       yaxis=YAxis(showgrid=False, zeroline=False, showticklabels=False)))
 
 
+def init():
+    try:
+        model
+    except NameError:
+        cache_raw_data('barabasi_albert_graph')
+
+
 @app.callback(Output('funnel-graph', 'figure'), [interval_element])
 def update_graph(n):
+    init()
     x = [x.name for x in agents]
     trace1 = go.Bar(x=x, y=[x.interbankAssets.value for x in agents], name='Loan Assets')
     trace2 = go.Bar(x=x, y=[x.externalAssets.value for x in agents], name='External Assets')
@@ -130,6 +138,7 @@ def update_graph(n):
 
 @app.callback(Output('show-bank-status', 'figure'), [interval_element])
 def update_graph_live(i):
+    init()
     graphs = []
     for ic, x in enumerate(agents):
         graphs.append(go.Scatter(x=np.arange(len(x.price_history)), y=x.price_history,
@@ -139,6 +148,23 @@ def update_graph_live(i):
     return dict(data=graphs, layout=layout)
 
 
+@app.callback(Output('bs-display', 'figure'), [interval_element])
+def update_graph_live(i):
+    init()
+    balance_sheet = model.schedule.agents[0].balance_sheet
+    assets = balance_sheet.find_node_series("Assets").get_all_terminal_nodes()
+    liabilitities = balance_sheet.find_node_series("Liabilities").get_all_terminal_nodes()
+    equity = balance_sheet.find_node_series("Equities").get_all_terminal_nodes()
+    trace = go.Table(
+        header=dict(values=["{}:{}".format(x, round(balance_sheet.find_node(x).value, 2)) for x in
+                            ['Assets', 'Liabilities', 'Equities']]),
+        cells=dict(values=[["{}:{}".format(x.name, round(x.value, 2)) for x in assets if x.value != 0.0],
+                           ["{}:{}".format(x.name, round(x.value, 2)) for x in liabilitities if x.value != 0.0],
+                           ["{}:{}".format(x.name, round(x.value, 2)) for x in equity if x.value != 0.0]]))
+
+    data = [trace]
+    return dict(data=data)
+
+
 if __name__ == '__main__':
-    cache_raw_data(ns.barabasi_albert_graph)
     app.run_server(debug=True, port=3434)

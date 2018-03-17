@@ -25,7 +25,8 @@ def get_main_body():
     return html.Div([
         html.Div([dcc.Graph(id='live-update-graph-network')], className="six columns"),
         html.Div([dcc.Graph(id='show-bank-status')], className="six columns"),
-        html.Div([dcc.Graph(id='funnel-graph')], className="six columns")
+        html.Div([dcc.Graph(id='funnel-graph')], className="six columns"),
+        html.Div([dcc.Graph(id='bs-display')], className="twelve columns")
     ], className="main")
 
 

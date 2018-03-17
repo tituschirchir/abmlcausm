@@ -3,7 +3,7 @@ import random
 import structures.constants as bst
 from network.core.skeleton import Node
 from products.equities import Stock
-from structures.bank_structures import BalanceSheet, double_entry
+from structures.bank_structures import BalanceSheet
 
 
 class Bank(Node):
@@ -36,9 +36,18 @@ class Bank(Node):
     def equity_change(self):
         init__s = self.stock.S
         self.stock.evolve()
-        self.capital.value += (self.stock.S - init__s) * self.issued_shares
-        self.externalAssets.value += (self.stock.S - init__s) * self.issued_shares
+        common = self.capital.find_node(bst.common_stock)
+        other = self.capital.find_node_series(bst.other_equity)
+        preferred = self.capital.find_node_series(bst.preferred_stock)
+        total = sum([x.value for x in [common, other, preferred]])
+        delta = (self.stock.S - init__s) * self.issued_shares
+        for x in [common, other, preferred]:
+            if x.value != 0.0:
+                value_total = delta * x.value / total
+                x.value += value_total
+        self.balance_sheet.find_node(bst.cash_and_cash_equivalents).value += delta
         self.price_history.append(self.stock.S)
+        self.balance_sheet.re_aggregate()
 
     def apply_initial_shock(self, shock):
         self.shock = shock
@@ -48,45 +57,57 @@ class Bank(Node):
         else:
             self.externalAssets.value -= self.shock
         self.deal_with_shock(tremor=False)
+        self.balance_sheet.re_aggregate()
 
     def deal_with_shock(self, tremor=True):
         # If no shock felt by bank, return
+        equity_impact = 0.0
+        recovery = 0.6
         if self.shock == 0.0:
             return
+        # if shock is resulting from interbank reverberations ----
+        self.affected = True
         if tremor:
-            if self.interbankAssets.value < self.shock:
-                self.interbankAssets.value = 0.0
-                self.bad_debt = self.shock - self.interbankAssets.value
-            else:
-                self.interbankAssets.value -= self.shock
-        # Check if enough money is set aside to cover losses (provision for defaults)
-        allowance_for_losses = self.balance_sheet.find_node(bst.allowance_for_loan_losses)
-        if -allowance_for_losses.value > self.shock:
-            allowance_for_losses.value += self.shock
-        else:
-            self.shock += allowance_for_losses.value
-            double_entry(allowance_for_losses, self.balance_sheet.find_node(bst.loans), allowance_for_losses.value,
-                         'di')
-            if self.capital.value > self.shock:
-                self.capital.value -= self.shock
-                self.affected = True
-            else:
-                residual = self.shock - self.capital
-                debt_collected = self.collect_debts(recovery=.9, residual=residual)
-                if residual - debt_collected > 0.0:
-                    self.deal_with_bankruptcy(residual - debt_collected)
-        self.shock = 0.0
-        self.stock.S = self.capital.value / self.issued_shares
+            liquid_external_assets = self.balance_sheet.find_node_series("Assets", "External", "Liquid")
+            disbursable = max(0.0, min(liquid_external_assets.value, self.shock))
+            liquid_nodes = liquid_external_assets.get_all_terminal_nodes()
+            for ln in liquid_nodes:
+                ln.value -= ln.value * disbursable / liquid_external_assets.value
+            equity_impact += disbursable
+            self.shock -= disbursable
+            # if shock cannot be absorbed by liquid assets
+            if self.shock > 0.0:
+                illiquid_external_assets = self.balance_sheet.find_node_series("Assets", "External", "Illiquid")
+                recovery_value = illiquid_external_assets.value * recovery
+                disbursable = min(self.shock, recovery_value)
+                for iln in illiquid_external_assets.get_all_terminal_nodes():
+                    iln.value -= iln.value * disbursable / recovery / illiquid_external_assets.value
+
+                retained_earnings_hit = disbursable * (1 - recovery) / recovery
+                self.balance_sheet.find_node_series("Equities", bst.retained_earnings).value -= retained_earnings_hit
+
+                equity_impact += disbursable
+                self.shock -= disbursable
+                if self.shock > 0.0:
+                    self.deal_with_bankruptcy(self.shock)
+
+            equity = self.balance_sheet.find_node_series("Equities")
+            if equity.value < equity_impact:
+                self.defaults = True
+            for eqty in equity.children:
+                eqty.value -= equity_impact * eqty.value / equity.value
+            equity.re_aggregate()
+            self.stock.S = equity.value / self.issued_shares
 
     def deal_with_bankruptcy(self, residual):
-        if random.random() > 0.25:
+        if random.random() > 0.5:
             self.process_bankruptcy(residual)
         else:
-            self.borrow_to_offset(residual)
+           self.borrow_to_offset(residual)
 
     def process_bankruptcy(self, residual):
-        self.capital.value = 0.0
         self.defaults = True
+        self.shock = 0.0
         living = [x for x in [y.node_to for y in self.edges] if not x.defaults]
         self.edges = []
         k = len(living)
@@ -97,7 +118,7 @@ class Bank(Node):
 
     def borrow_to_offset(self, residual):
         all_agents = self.model.schedule.agents
-        viable_lenders = [agt for agt in all_agents if agt.externalAssets > 2 * residual]
+        viable_lenders = [agt for agt in all_agents if agt.externalAssets.value > 2 * residual]
         if viable_lenders:
             lender = random.choice(viable_lenders)
             edge = self.edge_exists(lender)
